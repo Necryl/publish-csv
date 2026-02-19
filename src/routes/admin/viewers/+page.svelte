@@ -15,7 +15,7 @@
 	};
 </script>
 
-<section class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
+<section class="card">
 	<h1 class="text-xl font-semibold">Approved viewers</h1>
 	<p class="mt-2 text-sm text-[var(--muted)]">
 		Devices and users that have been approved to access a link.
@@ -44,7 +44,9 @@
 	{:else}
 		<div class="mt-4 grid gap-3">
 			{#each filteredViewers as viewer (viewer.id)}
-				<div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
+				<div
+					class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 transition-all hover:shadow-md sm:p-5"
+				>
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<div>
 							<p class="text-sm font-semibold">{viewer.linkName}</p>
@@ -57,7 +59,7 @@
 							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={viewer.id} />
 								<button
-									class="rounded-md border border-red-300 px-2 py-1 text-[10px] text-red-600 hover:text-red-700"
+									class="btn-danger text-xs"
 									formaction="?/revoke"
 									type="submit"
 									onclick={confirmRevoke}
@@ -87,8 +89,8 @@
 	{/if}
 
 	{#if form?.error}
-		<p class="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-			{form.error}
-		</p>
+		<div class="alert alert-error mt-4">
+			<span>{form.error}</span>
+		</div>
 	{/if}
 </section>

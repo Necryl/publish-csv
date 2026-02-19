@@ -94,28 +94,19 @@
 </script>
 
 <section class="grid gap-6">
-	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
+	<div class="card">
 		<h1 class="text-xl font-semibold">Create link</h1>
 		{#if !columns.length}
 			<p class="mt-2 text-sm text-[var(--muted)]">Upload a CSV before creating links.</p>
 		{:else}
 			<form class="mt-4 grid gap-4" method="post" use:submitBusy>
-				<label class="grid gap-2 text-sm">
-					<span>Label</span>
-					<input
-						class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
-						name="name"
-						required
-					/>
+				<label class="form-group">
+					<span class="font-medium">Label</span>
+					<input name="name" required />
 				</label>
-				<label class="grid gap-2 text-sm">
-					<span>Password (one-time)</span>
-					<input
-						class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
-						type="text"
-						name="password"
-						required
-					/>
+				<label class="form-group">
+					<span class="font-medium">Password (one-time)</span>
+					<input type="text" name="password" required />
 				</label>
 
 				<div class="grid gap-2 text-sm">
@@ -207,29 +198,25 @@
 
 				<input type="hidden" name="criteria" value={criteriaJson} />
 				{#if form?.error}
-					<p class="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-						{form.error}
-					</p>
+					<div class="alert alert-error">
+						<span>{form.error}</span>
+					</div>
 				{/if}
-				<button
-					class="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
-					formaction="?/create"
-					type="submit"
-				>
-					Create link
-				</button>
+				<button class="btn-primary" formaction="?/create" type="submit"> Create link </button>
 			</form>
 		{/if}
 	</div>
 
-	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
+	<div class="card">
 		<h2 class="text-lg font-semibold">Existing links</h2>
 		{#if !data.links.length}
 			<p class="mt-2 text-sm text-[var(--muted)]">No links yet.</p>
 		{:else}
 			<div class="mt-4 grid gap-3">
 				{#each data.links as link (link.id)}
-					<div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
+					<div
+						class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 transition-all hover:shadow-md sm:p-5"
+					>
 						<div class="flex flex-wrap items-center justify-between gap-3">
 							<form class="flex flex-wrap items-center gap-2" method="post" use:submitBusy>
 								<input type="hidden" name="id" value={link.id} />
@@ -238,17 +225,15 @@
 									name="name"
 									value={link.name}
 								/>
-								<button
-									class="rounded-md border border-[var(--line)] px-2 py-1 text-xs hover:text-[var(--accent)]"
-									formaction="?/rename"
-									type="submit"
-								>
+								<button class="btn-secondary text-xs" formaction="?/rename" type="submit">
 									Save
 								</button>
 							</form>
-							<div class="text-xs text-[var(--muted)]">
-								{link.active ? 'Active' : 'Disabled'}
-							</div>
+							{#if link.active}
+								<span class="badge badge-success">Active</span>
+							{:else}
+								<span class="badge">Disabled</span>
+							{/if}
 						</div>
 						<p class="mt-2 text-xs break-all text-[var(--muted)]">{link.id}</p>
 						{#if link.criteria && link.criteria.length > 0}
@@ -272,11 +257,16 @@
 							</p>
 						{/if}
 						<div class="mt-3 flex flex-wrap items-start gap-2 sm:items-center">
-							<span class="text-xs break-all text-[var(--muted)]">
+							<a
+								href={`${data.baseUrl}${link.id}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-xs break-all text-[var(--accent)] hover:underline"
+							>
 								Link: {data.baseUrl}{link.id}
-							</span>
+							</a>
 							<button
-								class="rounded-md border border-[var(--line)] px-2 py-1 text-xs hover:text-[var(--accent)]"
+								class="btn-secondary text-xs"
 								onclick={() => copyLink(`${data.baseUrl}${link.id}`)}
 								type="button"
 							>
@@ -302,18 +292,14 @@
 									/>
 									<span>Hide first</span>
 								</label>
-								<button
-									class="rounded-md border border-[var(--line)] px-2 py-1 text-xs hover:text-[var(--accent)]"
-									formaction="?/updateOptions"
-									type="submit"
-								>
+								<button class="btn-secondary text-xs" formaction="?/updateOptions" type="submit">
 									Update
 								</button>
 							</form>
 							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={link.id} />
 								<button
-									class="rounded-md border border-[var(--line)] px-3 py-1 text-xs hover:text-[var(--accent)]"
+									class="btn-secondary text-xs"
 									formaction={link.active ? '?/deactivate' : '?/activate'}
 									type="submit"
 								>
@@ -323,7 +309,7 @@
 							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={link.id} />
 								<button
-									class="rounded-md border border-red-300 px-3 py-1 text-xs text-red-600 hover:text-red-700"
+									class="btn-danger text-xs"
 									formaction="?/delete"
 									type="submit"
 									onclick={confirmDelete}

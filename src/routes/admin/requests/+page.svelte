@@ -10,7 +10,7 @@
 	);
 </script>
 
-<section class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
+<section class="card">
 	<h1 class="text-xl font-semibold">Recovery requests</h1>
 	{#if data.links?.length > 0}
 		<div class="mt-4 grid gap-2 sm:max-w-xs">
@@ -34,13 +34,21 @@
 	{:else}
 		<div class="mt-4 grid gap-3">
 			{#each filteredRequests as request (request.id)}
-				<div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
+				<div
+					class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 transition-all hover:shadow-md sm:p-5"
+				>
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<div>
 							<p class="text-sm font-semibold">{request.linkName}</p>
 							<p class="text-xs text-[var(--muted)]">Link {request.link_id}</p>
 						</div>
-						<div class="text-xs text-[var(--muted)]">{request.status}</div>
+						{#if request.status === 'pending'}
+							<span class="badge badge-warning">Pending</span>
+						{:else if request.status === 'approved'}
+							<span class="badge badge-success">Approved</span>
+						{:else}
+							<span class="badge">Denied</span>
+						{/if}
 					</div>
 					<p class="mt-2 text-xs text-[var(--muted)]">UA: {request.ua_hash}</p>
 					{#if request.message}
@@ -50,21 +58,13 @@
 						<div class="mt-3 flex flex-wrap gap-2">
 							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={request.id} />
-								<button
-									class="rounded-md bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white"
-									formaction="?/approve"
-									type="submit"
-								>
+								<button class="btn-primary text-xs" formaction="?/approve" type="submit">
 									Approve
 								</button>
 							</form>
 							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={request.id} />
-								<button
-									class="rounded-md border border-[var(--line)] px-3 py-1 text-xs"
-									formaction="?/deny"
-									type="submit"
-								>
+								<button class="btn-secondary text-xs" formaction="?/deny" type="submit">
 									Deny
 								</button>
 							</form>
@@ -76,8 +76,8 @@
 	{/if}
 
 	{#if form?.error}
-		<p class="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-			{form.error}
-		</p>
+		<div class="alert alert-error mt-4">
+			<span>{form.error}</span>
+		</div>
 	{/if}
 </section>
