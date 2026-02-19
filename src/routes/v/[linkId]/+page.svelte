@@ -31,21 +31,21 @@
 <div class="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
 	<div class="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
 		{#if data.status === 'inactive'}
-			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-4 sm:p-6">
 				<h1 class="text-xl font-semibold">Link inactive</h1>
 				<p class="mt-2 text-sm text-[var(--muted)]">This link has been disabled.</p>
 			</div>
 		{:else if data.status === 'locked'}
-			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-4 sm:p-6">
 				<h1 class="text-xl font-semibold">{data.name}</h1>
 				<p class="mt-2 text-sm text-[var(--muted)]">
 					Enter the one-time password to unlock this link on your device.
 				</p>
-				<form class="mt-6 grid max-w-sm gap-3" method="post" use:submitBusy>
+				<form class="mt-6 grid gap-3" method="post" use:submitBusy>
 					<label class="grid gap-2 text-sm">
 						<span>Password</span>
 						<input
-							class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
+							class="w-full rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
 							type="password"
 							name="password"
 							required
@@ -57,7 +57,7 @@
 						</p>
 					{/if}
 					<button
-						class="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white"
+						class="w-full rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white"
 						formaction="?/login"
 						type="submit"
 					>
@@ -66,22 +66,22 @@
 				</form>
 			</div>
 
-			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-4 sm:p-6">
 				<h2 class="text-lg font-semibold">Request access</h2>
 				<p class="mt-2 text-sm text-[var(--muted)]">
 					If you cannot access this device, send a request to the admin.
 				</p>
-				<form class="mt-4 grid max-w-sm gap-3" method="post" use:submitBusy>
+				<form class="mt-4 grid gap-3" method="post" use:submitBusy>
 					<label class="grid gap-2 text-sm">
 						<span>Message</span>
 						<textarea
-							class="min-h-[120px] rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
+							class="w-full min-h-[120px] rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
 							name="message"
 							placeholder="Tell the admin who you are..."
 						></textarea>
 					</label>
 					<button
-						class="rounded-md border border-[var(--line)] px-4 py-2 text-sm"
+						class="w-full rounded-md border border-[var(--line)] px-4 py-2 text-sm"
 						formaction="?/request"
 						type="submit"
 					>
@@ -90,7 +90,7 @@
 				</form>
 			</div>
 		{:else if data.status === 'ok'}
-			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-4 sm:p-6">
 				<h1 class="text-xl font-semibold">{data.name}</h1>
 				{#if data.updateMessage && data.updateMessage.trim()}
 					<p class="mt-2 text-sm text-[var(--muted)]">Updated: {data.updateMessage}</p>
