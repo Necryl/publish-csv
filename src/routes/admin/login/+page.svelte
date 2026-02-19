@@ -3,8 +3,8 @@
 	let { form } = $props();
 </script>
 
-<div class="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
-	<div class="mx-auto flex min-h-screen max-w-lg items-center px-4 py-10 sm:px-6 sm:py-12">
+<div class="flex h-full flex-col items-center justify-center px-4">
+	<div class="w-full max-w-lg">
 		<div
 			class="w-full rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6 shadow-lg sm:p-8"
 		>

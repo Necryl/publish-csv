@@ -3,7 +3,7 @@
 	let { children } = $props();
 </script>
 
-<div class="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
+<div class="flex min-h-screen flex-col bg-[var(--surface)] text-[var(--ink)]">
 	<header class="border-b border-[var(--line)] bg-[var(--surface-2)]">
 		<div
 			class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
@@ -28,5 +28,7 @@
 			</nav>
 		</div>
 	</header>
-	<main class="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">{@render children()}</main>
+	<main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+		{@render children()}
+	</main>
 </div>
