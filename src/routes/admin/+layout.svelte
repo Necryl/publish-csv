@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { submitBusy } from '$lib/submit-busy';
 	let { children } = $props();
 </script>
 
@@ -14,12 +15,14 @@
 				<a class="hover:text-[var(--accent)]" href="/admin/csv">CSV</a>
 				<a class="hover:text-[var(--accent)]" href="/admin/links">Links</a>
 				<a class="hover:text-[var(--accent)]" href="/admin/requests">Requests</a>
-				<a
-					class="rounded-md border border-[var(--line)] px-3 py-1 hover:border-[var(--accent)]"
-					href="/admin/logout"
-				>
-					Sign out
-				</a>
+				<form method="post" action="/admin/logout" use:submitBusy>
+					<button
+						class="rounded-md border border-[var(--line)] px-3 py-1 hover:border-[var(--accent)]"
+						type="submit"
+					>
+						Sign out
+					</button>
+				</form>
 			</nav>
 		</div>
 	</header>
