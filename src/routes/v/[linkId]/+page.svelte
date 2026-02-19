@@ -2,7 +2,6 @@
 	let { data, form } = $props();
 	let rows = $derived(data.rows ?? []);
 	let columns = $derived(data.columns ?? []);
-	let total = $derived(data.total ?? 0);
 	let pageTitle = $derived.by(() => {
 		if (data.status === 'ok') return `${data.name} - Publish CSV`;
 		if (data.status === 'locked') return `${data.name} - Unlock`;
@@ -88,12 +87,6 @@
 		{:else if data.status === 'ok'}
 			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
 				<h1 class="text-xl font-semibold">{data.name}</h1>
-				<p class="mt-2 text-sm text-[var(--muted)]">
-					Showing {rows.length} of {total} rows
-					{#if data.truncated}
-						(limited to first 500)
-					{/if}
-				</p>
 			</div>
 			<div class="overflow-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-2)]">
 				<table class="min-w-full text-left text-sm">
