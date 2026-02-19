@@ -7,7 +7,8 @@ import {
 	getLinkWithFile,
 	submitRecoveryRequest,
 	validateDevice,
-	verifyLinkPassword
+	verifyLinkPassword,
+	getCurrentFile
 } from '$lib/server/db';
 import { applyCriteria } from '$lib/server/csv';
 import { signCookieValue, verifySignedCookie } from '$lib/server/crypto';
@@ -67,7 +68,8 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 		return { status: 'locked', name: link.name };
 	}
 
-	const file = link.csv_files;
+	// Use the currently active file, not the one linked at creation time
+	const file = await getCurrentFile();
 	if (!file) {
 		return { status: 'inactive' };
 	}

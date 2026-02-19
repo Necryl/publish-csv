@@ -13,6 +13,10 @@
 		if (data.status === 'locked') return 'Enter the one-time password to unlock this link.';
 		return 'This link is inactive.';
 	});
+
+	$effect(() => {
+		console.log('Viewer page received data:', data);
+	});
 </script>
 
 <svelte:head>
