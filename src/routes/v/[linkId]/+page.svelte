@@ -25,7 +25,7 @@
 </svelte:head>
 
 <div class="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
-	<div class="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-10">
+	<div class="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
 		{#if data.status === 'inactive'}
 			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
 				<h1 class="text-xl font-semibold">Link inactive</h1>
@@ -90,7 +90,7 @@
 				<h1 class="text-xl font-semibold">{data.name}</h1>
 			</div>
 			<div class="overflow-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-2)]">
-				<table class="min-w-full text-left text-sm">
+				<table class="min-w-full text-left text-xs sm:text-sm">
 					<thead class="bg-[var(--surface)] text-xs tracking-[0.2em] text-[var(--muted)] uppercase">
 						<tr>
 							{#each columns as column (column.name)}

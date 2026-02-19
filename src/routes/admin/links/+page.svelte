@@ -86,7 +86,7 @@
 </script>
 
 <section class="grid gap-6">
-	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
 		<h1 class="text-xl font-semibold">Create link</h1>
 		{#if !columns.length}
 			<p class="mt-2 text-sm text-[var(--muted)]">Upload a CSV before creating links.</p>
@@ -199,19 +199,19 @@
 		{/if}
 	</div>
 
-	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
 		<h2 class="text-lg font-semibold">Existing links</h2>
 		{#if !data.links.length}
 			<p class="mt-2 text-sm text-[var(--muted)]">No links yet.</p>
 		{:else}
 			<div class="mt-4 grid gap-3">
 				{#each data.links as link (link.id)}
-					<div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+					<div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
 						<div class="flex flex-wrap items-center justify-between gap-3">
 							<form class="flex flex-wrap items-center gap-2" method="post" use:submitBusy>
 								<input type="hidden" name="id" value={link.id} />
 								<input
-									class="rounded-md border border-[var(--line)] bg-transparent px-2 py-1 text-sm font-semibold"
+									class="w-full rounded-md border border-[var(--line)] bg-transparent px-2 py-1 text-sm font-semibold sm:w-auto"
 									name="name"
 									value={link.name}
 								/>
@@ -227,9 +227,11 @@
 								{link.active ? 'Active' : 'Disabled'}
 							</div>
 						</div>
-						<p class="mt-2 text-xs text-[var(--muted)]">{link.id}</p>
-						<div class="mt-3 flex flex-wrap items-center gap-2">
-							<span class="text-xs text-[var(--muted)]">Link: {data.baseUrl}{link.id}</span>
+						<p class="mt-2 text-xs break-all text-[var(--muted)]">{link.id}</p>
+						<div class="mt-3 flex flex-wrap items-start gap-2 sm:items-center">
+							<span class="text-xs break-all text-[var(--muted)]">
+								Link: {data.baseUrl}{link.id}
+							</span>
 							<button
 								class="rounded-md border border-[var(--line)] px-2 py-1 text-xs hover:text-[var(--accent)]"
 								onclick={() => copyLink(`${data.baseUrl}${link.id}`)}

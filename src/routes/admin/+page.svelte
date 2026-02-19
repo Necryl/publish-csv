@@ -3,7 +3,7 @@
 </script>
 
 <section class="grid gap-6 md:grid-cols-3">
-	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
 		<p class="text-xs tracking-[0.3em] text-[var(--muted)] uppercase">Current CSV</p>
 		<h2 class="mt-3 text-lg font-semibold">
 			{data.current ? data.current.filename : 'No file uploaded'}
@@ -15,7 +15,7 @@
 			Manage CSV
 		</a>
 	</div>
-	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
 		<p class="text-xs tracking-[0.3em] text-[var(--muted)] uppercase">Links</p>
 		<h2 class="mt-3 text-lg font-semibold">{data.linkCount}</h2>
 		<p class="mt-2 text-sm text-[var(--muted)]">Active share links created.</p>
@@ -23,7 +23,7 @@
 			Manage links
 		</a>
 	</div>
-	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
 		<p class="text-xs tracking-[0.3em] text-[var(--muted)] uppercase">Recovery</p>
 		<h2 class="mt-3 text-lg font-semibold">{data.pendingRequests}</h2>
 		<p class="mt-2 text-sm text-[var(--muted)]">Pending access requests.</p>

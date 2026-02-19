@@ -3,14 +3,14 @@
 	let { data, form } = $props();
 </script>
 
-<section class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+<section class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
 	<h1 class="text-xl font-semibold">Recovery requests</h1>
 	{#if !data.requests.length}
 		<p class="mt-2 text-sm text-[var(--muted)]">No requests yet.</p>
 	{:else}
 		<div class="mt-4 grid gap-3">
 			{#each data.requests as request (request.id)}
-				<div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+				<div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-5">
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<div>
 							<p class="text-sm font-semibold">Link {request.link_id}</p>
@@ -22,7 +22,7 @@
 						<p class="mt-2 text-sm text-[var(--muted)]">{request.message}</p>
 					{/if}
 					{#if request.status === 'pending'}
-						<div class="mt-3 flex gap-2">
+						<div class="mt-3 flex flex-wrap gap-2">
 							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={request.id} />
 								<button

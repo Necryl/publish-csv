@@ -4,8 +4,10 @@
 </script>
 
 <div class="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
-	<div class="mx-auto flex min-h-screen max-w-lg items-center px-6 py-12">
-		<div class="w-full rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-8 shadow-lg">
+	<div class="mx-auto flex min-h-screen max-w-lg items-center px-4 py-10 sm:px-6 sm:py-12">
+		<div
+			class="w-full rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6 shadow-lg sm:p-8"
+		>
 			<h1 class="text-2xl font-semibold">Admin Sign In</h1>
 			<p class="mt-2 text-sm text-[var(--muted)]">
 				Single-session login. Any other admin session is revoked.

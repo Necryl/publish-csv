@@ -6,13 +6,15 @@
 	--surface: #f7f3ec;
 	--surface-2: #fffaf2;
 	--ink: #1d1b19;
-	--muted: #6b5f52;
+	--muted: #5a4f44;
 	--line: #e3d6c7;
 	--accent: #2a6f62;
 }
 
 body {
 	font-family: 'Poppins', 'Segoe UI', sans-serif;
+	font-weight: 500;
+	line-height: 1.6;
 	background: var(--surface);
 	color: var(--ink);
 	min-height: 100vh;

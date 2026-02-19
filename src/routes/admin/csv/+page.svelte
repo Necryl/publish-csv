@@ -4,7 +4,7 @@
 </script>
 
 <section class="grid gap-6">
-	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+	<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
 		<h1 class="text-xl font-semibold">CSV File</h1>
 		<p class="mt-2 text-sm text-[var(--muted)]">
 			Upload a CSV to replace the current encrypted file. Existing links will point to the new file.
@@ -37,9 +37,9 @@
 	</div>
 
 	{#if data.current}
-		<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
+		<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-5 sm:p-6">
 			<h2 class="text-lg font-semibold">Current file</h2>
-			<p class="mt-2 text-sm text-[var(--muted)]">{data.current.filename}</p>
+			<p class="mt-2 text-sm break-all text-[var(--muted)]">{data.current.filename}</p>
 			<p class="mt-1 text-sm text-[var(--muted)]">{data.current.row_count} rows</p>
 		</div>
 	{/if}
