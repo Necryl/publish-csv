@@ -75,7 +75,7 @@
 					<label class="grid gap-2 text-sm">
 						<span>Message</span>
 						<textarea
-							class="w-full min-h-[120px] rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
+							class="min-h-[120px] w-full rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
 							name="message"
 							placeholder="Tell the admin who you are..."
 						></textarea>
