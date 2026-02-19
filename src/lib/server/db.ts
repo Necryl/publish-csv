@@ -190,17 +190,26 @@ export async function createAccessLink(input: {
 	return { id: data.id };
 }
 
-export async function verifyLinkPassword(linkId: string, password: string): Promise<boolean> {
+export async function verifyLinkPassword(
+	linkId: string,
+	password: string
+): Promise<{ valid: boolean; alreadyUsed: boolean }> {
 	const { data, error } = await supabase
 		.from('access_links')
-		.select('password_salt, password_hash, active')
+		.select('password_salt, password_hash, active, password_used_at')
 		.eq('id', linkId)
 		.maybeSingle();
-	if (error || !data || !data.active) return false;
-	return scryptVerify(password, data.password_salt, data.password_hash);
+	if (error || !data || !data.active) return { valid: false, alreadyUsed: false };
+	const valid = scryptVerify(password, data.password_salt, data.password_hash);
+	const alreadyUsed = data.password_used_at !== null;
+	return { valid, alreadyUsed };
 }
 
-export async function activateDevice(linkId: string, userAgent: string): Promise<string> {
+export async function activateDevice(
+	linkId: string,
+	userAgent: string,
+	markPasswordUsed: boolean = false
+): Promise<string> {
 	const token = generateToken();
 	const tokenHash = hashToken(token);
 	const uaHash = hashUserAgent(userAgent);
@@ -209,6 +218,12 @@ export async function activateDevice(linkId: string, userAgent: string): Promise
 		token_hash: tokenHash,
 		ua_hash: uaHash
 	});
+	if (markPasswordUsed) {
+		await supabase
+			.from('access_links')
+			.update({ password_used_at: new Date().toISOString() })
+			.eq('id', linkId);
+	}
 	return token;
 }
 

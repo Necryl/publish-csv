@@ -31,6 +31,7 @@ create table if not exists access_links (
 	active boolean not null default true,
 	password_salt text not null,
 	password_hash text not null,
+	password_used_at timestamptz,
 	created_at timestamptz not null default now()
 );
 

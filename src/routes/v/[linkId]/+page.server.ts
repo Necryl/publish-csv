@@ -118,9 +118,14 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const password = String(form.get('password') ?? '');
 		if (!password) return fail(400, { error: 'Password required' });
-		const ok = await verifyLinkPassword(params.linkId, password);
-		if (!ok) return fail(400, { error: 'Invalid password' });
-		const token = await activateDevice(params.linkId, request.headers.get('user-agent') ?? '');
+		const result = await verifyLinkPassword(params.linkId, password);
+		if (result.alreadyUsed) {
+			return fail(400, {
+				error: 'This link is secured with a one-time password. It has already been used. Contact the admin to request access from this device.'
+			});
+		}
+		if (!result.valid) return fail(400, { error: 'Invalid password' });
+		const token = await activateDevice(params.linkId, request.headers.get('user-agent') ?? '', true);
 		cookies.set(deviceCookieName(params.linkId), signCookieValue(token), {
 			path: '/',
 			httpOnly: true,
