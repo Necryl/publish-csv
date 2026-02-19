@@ -11,7 +11,9 @@ import {
 	getCurrentFile
 } from '$lib/server/db';
 import { applyCriteria } from '$lib/server/csv';
-import { signCookieValue, verifySignedCookie } from '$lib/server/crypto';
+import { hashDeviceFingerprint, signCookieValue, verifySignedCookie } from '$lib/server/crypto';
+import { getRateLimitKey, rateLimit } from '$lib/server/rateLimit';
+import { recoveryRequestSchema } from '$lib/server/schemas';
 import { dev } from '$app/environment';
 
 const MAX_ROWS = 500;
@@ -26,19 +28,22 @@ function requestCookieName(linkId: string): string {
 	return `request_${linkId}`;
 }
 
-export const load: PageServerLoad = async ({ params, cookies, request }) => {
+export const load: PageServerLoad = async ({ params, cookies, request, getClientAddress }) => {
 	const link = await getLinkWithFile(params.linkId);
 	if (!link || !link.active) {
 		return { status: 'inactive' };
 	}
 	const userAgent = request.headers.get('user-agent') ?? '';
+	const acceptLanguage = request.headers.get('accept-language') ?? '';
+	const clientIp = getClientAddress?.() ?? 'unknown';
+	const deviceHash = hashDeviceFingerprint(userAgent, acceptLanguage, clientIp);
 	const deviceCookie = cookies.get(deviceCookieName(link.id));
 	let authorized = false;
 
 	if (deviceCookie) {
 		const raw = verifySignedCookie(deviceCookie);
 		if (raw) {
-			authorized = await validateDevice(link.id, raw, userAgent);
+			authorized = await validateDevice(link.id, raw, deviceHash);
 		}
 	}
 
@@ -49,7 +54,7 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 			if (raw) {
 				const approved = await checkApprovedRequest(raw);
 				if (approved?.approved && approved.linkId === link.id) {
-					const token = await activateDevice(link.id, userAgent, false, raw);
+					const token = await activateDevice(link.id, deviceHash, false, raw);
 					cookies.set(deviceCookieName(link.id), signCookieValue(token), {
 						path: '/',
 						httpOnly: true,
@@ -77,8 +82,7 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 	let rows: Row[] = [];
 	try {
 		rows = await fetchCsvRows(file);
-	} catch (error) {
-		console.error('Error fetching CSV rows:', error);
+	} catch {
 		return { status: 'inactive' };
 	}
 	const filtered = applyCriteria(rows, file.schema, link.criteria ?? []);
@@ -114,7 +118,12 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 };
 
 export const actions: Actions = {
-	login: async ({ params, request, cookies }) => {
+	login: async (event) => {
+		const { params, request, cookies } = event;
+		const rateKey = getRateLimitKey(event, 'viewer_login', params.linkId);
+		if (!rateLimit(rateKey)) {
+			return fail(429, { error: 'Too many attempts. Try again later.' });
+		}
 		const form = await request.formData();
 		const password = String(form.get('password') ?? '');
 		if (!password) return fail(400, { error: 'Password required' });
@@ -126,11 +135,23 @@ export const actions: Actions = {
 			});
 		}
 		if (!result.valid) return fail(400, { error: 'Invalid password' });
-		const token = await activateDevice(
-			params.linkId,
-			request.headers.get('user-agent') ?? '',
-			true
-		);
+		const userAgent = request.headers.get('user-agent') ?? '';
+		const acceptLanguage = request.headers.get('accept-language') ?? '';
+		const clientIp = event.getClientAddress?.() ?? 'unknown';
+		const deviceHash = hashDeviceFingerprint(userAgent, acceptLanguage, clientIp);
+		let token: string;
+		try {
+			token = await activateDevice(params.linkId, deviceHash, true);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : '';
+			if (/already used/i.test(message)) {
+				return fail(400, {
+					error:
+						'This link is secured with a one-time password. It has already been used. Contact the admin to request access from this device.'
+				});
+			}
+			return fail(400, { error: 'Unable to activate this device. Try again later.' });
+		}
 		cookies.set(deviceCookieName(params.linkId), signCookieValue(token), {
 			path: '/',
 			httpOnly: true,
@@ -140,14 +161,25 @@ export const actions: Actions = {
 		});
 		throw redirect(303, `/v/${params.linkId}`);
 	},
-	request: async ({ params, request, cookies }) => {
+	request: async (event) => {
+		const { params, request, cookies } = event;
+		const rateKey = getRateLimitKey(event, 'viewer_request', params.linkId);
+		if (!rateLimit(rateKey)) {
+			return fail(429, { error: 'Too many requests. Try again later.' });
+		}
 		const form = await request.formData();
-		const message = String(form.get('message') ?? '').trim();
-		const requestId = await submitRecoveryRequest(
-			params.linkId,
-			request.headers.get('user-agent') ?? '',
-			message
-		);
+		const parsed = recoveryRequestSchema.safeParse({
+			message: form.get('message') ?? undefined
+		});
+		if (!parsed.success) {
+			return fail(400, { error: parsed.error.issues[0]?.message ?? 'Invalid input' });
+		}
+		const message = (parsed.data.message ?? '').trim();
+		const userAgent = request.headers.get('user-agent') ?? '';
+		const acceptLanguage = request.headers.get('accept-language') ?? '';
+		const clientIp = event.getClientAddress?.() ?? 'unknown';
+		const deviceHash = hashDeviceFingerprint(userAgent, acceptLanguage, clientIp);
+		const requestId = await submitRecoveryRequest(params.linkId, deviceHash, message);
 		cookies.set(requestCookieName(params.linkId), signCookieValue(requestId), {
 			path: '/',
 			httpOnly: true,

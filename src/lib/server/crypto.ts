@@ -8,6 +8,15 @@ export function hashUserAgent(userAgent: string): string {
 	return crypto.createHash('sha256').update(userAgent).digest('hex');
 }
 
+export function hashDeviceFingerprint(
+	userAgent: string,
+	acceptLanguage: string,
+	clientIp: string
+): string {
+	const combined = `${userAgent}|${acceptLanguage}|${clientIp}`;
+	return crypto.createHash('sha256').update(combined).digest('hex');
+}
+
 export function scryptHash(password: string, salt: string): string {
 	return crypto.scryptSync(password, salt, 32).toString('hex');
 }

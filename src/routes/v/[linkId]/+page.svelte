@@ -14,9 +14,7 @@
 		return 'This link is inactive.';
 	});
 
-	$effect(() => {
-		console.log('Viewer page received data:', data);
-	});
+	$effect(() => {});
 </script>
 
 <svelte:head>

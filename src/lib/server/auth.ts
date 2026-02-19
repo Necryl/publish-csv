@@ -8,6 +8,7 @@ import {
 	verifySignedCookie
 } from './crypto';
 import { requireEnv } from './env';
+import { auditLog } from './auditLog';
 
 const adminEmail = requireEnv('ADMIN_EMAIL');
 const adminPassword = requireEnv('ADMIN_PASSWORD');
@@ -38,6 +39,7 @@ export async function createAdminSession(userAgent: string): Promise<AdminSessio
 		ua_hash: userAgentHash,
 		expires_at: expiresAt
 	});
+	await auditLog('admin_login', { userAgent }, sessionId);
 
 	return { sessionId, userAgentHash, expiresAt };
 }

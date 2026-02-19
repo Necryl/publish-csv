@@ -6,10 +6,10 @@ import {
 	encryptBuffer,
 	generateToken,
 	hashToken,
-	hashUserAgent,
 	scryptHash,
 	scryptVerify
 } from './crypto';
+import { auditLog } from './auditLog';
 
 export type StoredFile = {
 	id: string;
@@ -47,8 +47,6 @@ export async function getCurrentFile(): Promise<StoredFile | null> {
 }
 
 export async function setCurrentFile(fileId: string): Promise<void> {
-	console.log('setCurrentFile called with:', fileId);
-
 	const { error } = await supabase.from('app_settings').upsert({
 		key: 'current_file_id',
 		value: { id: fileId },
@@ -56,11 +54,8 @@ export async function setCurrentFile(fileId: string): Promise<void> {
 	});
 
 	if (error) {
-		console.error('Error setting active file:', error);
 		throw error;
 	}
-
-	console.log('File activated:', fileId);
 }
 
 export async function updateFileMessage(fileId: string, message: string | null): Promise<void> {
@@ -153,6 +148,11 @@ export async function uploadEncryptedCsv(
 	if (error || !data) {
 		throw new Error(error?.message ?? 'Unable to save file');
 	}
+	await auditLog('csv_uploaded', {
+		fileId: data.id,
+		filename: file.name,
+		rowCount: parsed.rows.length
+	});
 	return data;
 }
 
@@ -187,6 +187,7 @@ export async function createAccessLink(input: {
 		.select('id')
 		.single();
 	if (error || !data) throw new Error(error?.message ?? 'Unable to create link');
+	await auditLog('link_created', { linkId: data.id, name: input.name });
 	return { id: data.id };
 }
 
@@ -207,41 +208,58 @@ export async function verifyLinkPassword(
 
 export async function activateDevice(
 	linkId: string,
-	userAgent: string,
+	deviceHash: string,
 	markPasswordUsed: boolean = false,
 	approvedRequestId?: string
 ): Promise<string> {
 	const token = generateToken();
 	const tokenHash = hashToken(token);
-	const uaHash = hashUserAgent(userAgent);
-	await supabase.from('link_devices').insert({
-		link_id: linkId,
-		token_hash: tokenHash,
-		ua_hash: uaHash,
-		approved_request_id: approvedRequestId ?? null
-	});
+	const { data: device, error: deviceError } = await supabase
+		.from('link_devices')
+		.insert({
+			link_id: linkId,
+			token_hash: tokenHash,
+			ua_hash: deviceHash,
+			approved_request_id: approvedRequestId ?? null
+		})
+		.select('id')
+		.single();
+	if (deviceError || !device) {
+		throw new Error(deviceError?.message ?? 'Unable to activate device');
+	}
 	if (markPasswordUsed) {
-		await supabase
+		const { data: updated, error: updateError } = await supabase
 			.from('access_links')
 			.update({ password_used_at: new Date().toISOString() })
-			.eq('id', linkId);
+			.eq('id', linkId)
+			.is('password_used_at', null)
+			.select('id')
+			.maybeSingle();
+		if (updateError) {
+			await supabase.from('link_devices').delete().eq('id', device.id);
+			throw new Error(updateError.message);
+		}
+		if (!updated) {
+			await supabase.from('link_devices').delete().eq('id', device.id);
+			throw new Error('Password already used');
+		}
 	}
+	await auditLog('viewer_activated', { linkId });
 	return token;
 }
 
 export async function validateDevice(
 	linkId: string,
 	token: string,
-	userAgent: string
+	deviceHash: string
 ): Promise<boolean> {
 	const tokenHash = hashToken(token);
-	const uaHash = hashUserAgent(userAgent);
 	const { data } = await supabase
 		.from('link_devices')
 		.select('id')
 		.eq('link_id', linkId)
 		.eq('token_hash', tokenHash)
-		.eq('ua_hash', uaHash)
+		.eq('ua_hash', deviceHash)
 		.maybeSingle();
 	return !!data;
 }
@@ -340,6 +358,7 @@ export async function revokeViewerDevice(deviceId: string): Promise<void> {
 
 	const { error: deleteError } = await supabase.from('link_devices').delete().eq('id', deviceId);
 	if (deleteError) throw new Error(deleteError.message);
+	await auditLog('device_revoked', { deviceId, linkId: device.link_id });
 
 	await supabase
 		.from('recovery_requests')
@@ -351,16 +370,16 @@ export async function revokeViewerDevice(deviceId: string): Promise<void> {
 
 export async function submitRecoveryRequest(
 	linkId: string,
-	userAgent: string,
+	deviceHash: string,
 	message: string
 ): Promise<string> {
-	const uaHash = hashUserAgent(userAgent);
 	const { data, error } = await supabase
 		.from('recovery_requests')
-		.insert({ link_id: linkId, ua_hash: uaHash, message })
+		.insert({ link_id: linkId, ua_hash: deviceHash, message })
 		.select('id')
 		.single();
 	if (error || !data) throw new Error(error?.message ?? 'Unable to create request');
+	await auditLog('recovery_requested', { requestId: data.id, linkId });
 	return data.id;
 }
 
@@ -369,6 +388,7 @@ export async function approveRequest(requestId: string): Promise<void> {
 		.from('recovery_requests')
 		.update({ status: 'approved', resolved_at: new Date().toISOString() })
 		.eq('id', requestId);
+	await auditLog('recovery_approved', { requestId });
 }
 
 export async function denyRequest(requestId: string): Promise<void> {
@@ -376,6 +396,7 @@ export async function denyRequest(requestId: string): Promise<void> {
 		.from('recovery_requests')
 		.update({ status: 'denied', resolved_at: new Date().toISOString() })
 		.eq('id', requestId);
+	await auditLog('recovery_denied', { requestId });
 }
 
 export async function getLinkWithFile(linkId: string): Promise<any | null> {

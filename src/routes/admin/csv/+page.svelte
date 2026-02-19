@@ -27,6 +27,7 @@
 					class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
 					type="text"
 					name="updateMessage"
+					maxlength="500"
 					placeholder="e.g., Fixed data, Added new columns..."
 				/>
 			</label>
@@ -105,6 +106,7 @@
 									type="text"
 									name="message"
 									value={file.update_message || ''}
+									maxlength="500"
 									placeholder="Message for viewers..."
 								/>
 							</label>

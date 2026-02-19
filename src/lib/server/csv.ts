@@ -8,6 +8,16 @@ export type CsvSchema = {
 export type CsvCriteriaOp = 'eq' | 'contains' | 'gt' | 'gte' | 'lt' | 'lte';
 export type CsvCriteria = { column: string; op: CsvCriteriaOp; value: string };
 
+const MAX_CSV_SIZE_MB = 10;
+const MAX_CSV_SIZE_BYTES = MAX_CSV_SIZE_MB * 1024 * 1024;
+
+export function validateCsvSize(file: File): string | null {
+	if (file.size > MAX_CSV_SIZE_BYTES) {
+		return `File exceeds ${MAX_CSV_SIZE_MB}MB limit`;
+	}
+	return null;
+}
+
 export function parseCsv(text: string): { rows: Record<string, string>[]; headers: string[] } {
 	const records = parse(text, {
 		columns: true,
@@ -15,7 +25,18 @@ export function parseCsv(text: string): { rows: Record<string, string>[]; header
 		trim: true
 	}) as Record<string, string>[];
 
-	const headers = records.length > 0 ? Object.keys(records[0]) : [];
+	let headers = records.length > 0 ? Object.keys(records[0]) : [];
+	if (!headers.length) {
+		const headerRows = parse(text, {
+			columns: false,
+			skip_empty_lines: true,
+			trim: true
+		}) as Array<Array<string | number | boolean | null>>;
+		if (headerRows.length > 0) {
+			headers = headerRows[0].map((value) => String(value ?? '').trim()).filter(Boolean);
+		}
+	}
+
 	return { rows: records, headers };
 }
 
@@ -71,6 +92,8 @@ function matchRule(
 	const left = normalizeValue(value, type);
 	const right = normalizeValue(rule.value, type);
 
+	if (left === null || right === null) return false;
+
 	switch (rule.op) {
 		case 'eq':
 			return left === right;
@@ -89,14 +112,17 @@ function matchRule(
 	}
 }
 
-function normalizeValue(value: string, type: CsvColumnType): string | number {
+function normalizeValue(value: string, type: CsvColumnType): string | number | null {
+	const trimmed = value.trim();
 	if (type === 'number') {
-		const num = Number(value);
-		return Number.isNaN(num) ? 0 : num;
+		if (!trimmed) return null;
+		const num = Number(trimmed);
+		return Number.isNaN(num) ? null : num;
 	}
 	if (type === 'date') {
-		const date = Date.parse(value);
-		return Number.isNaN(date) ? 0 : date;
+		if (!trimmed) return null;
+		const date = Date.parse(trimmed);
+		return Number.isNaN(date) ? null : date;
 	}
 	return value;
 }

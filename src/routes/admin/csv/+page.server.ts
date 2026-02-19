@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { inferSchema, parseCsv } from '$lib/server/csv';
+import { inferSchema, parseCsv, validateCsvSize } from '$lib/server/csv';
 import {
 	getCurrentFile,
 	uploadEncryptedCsv,
@@ -9,6 +9,10 @@ import {
 	deleteFile,
 	setCurrentFile
 } from '$lib/server/db';
+import { mapActionError } from '$lib/server/error-mapper';
+import { logError } from '$lib/server/logger';
+
+const MAX_UPDATE_MESSAGE_LENGTH = 500;
 
 export const load: PageServerLoad = async () => {
 	const current = await getCurrentFile();
@@ -24,6 +28,10 @@ export const actions: Actions = {
 		if (!(file instanceof File)) {
 			return fail(400, { error: 'Missing file' });
 		}
+		const sizeError = validateCsvSize(file);
+		if (sizeError) {
+			return fail(400, { error: sizeError });
+		}
 		try {
 			const text = await file.text();
 			const parsed = parseCsv(text);
@@ -32,10 +40,14 @@ export const actions: Actions = {
 			}
 			const schema = inferSchema(parsed.rows, parsed.headers);
 			const messageValue = typeof updateMessage === 'string' ? updateMessage.trim() : null;
+			if (messageValue && messageValue.length > MAX_UPDATE_MESSAGE_LENGTH) {
+				return fail(400, { error: 'Update message is too long' });
+			}
 			const stored = await uploadEncryptedCsv(file, parsed, schema, messageValue);
 			return { success: true, fileId: stored.id };
 		} catch (error) {
-			return fail(400, { error: (error as Error).message });
+			logError('csv_upload_failed', { error });
+			return fail(400, { error: mapActionError(error, 'Unable to upload CSV') });
 		}
 	},
 	updateMessage: async ({ request }) => {
@@ -47,32 +59,28 @@ export const actions: Actions = {
 		}
 		try {
 			const messageValue = typeof message === 'string' ? message.trim() : null;
+			if (messageValue && messageValue.length > MAX_UPDATE_MESSAGE_LENGTH) {
+				return fail(400, { error: 'Update message is too long' });
+			}
 			await updateFileMessage(fileId, messageValue);
 			return { success: true };
 		} catch (error) {
-			return fail(400, { error: (error as Error).message });
+			logError('csv_update_message_failed', { error, fileId });
+			return fail(400, { error: mapActionError(error, 'Unable to update message') });
 		}
 	},
 	setActive: async ({ request }) => {
 		const form = await request.formData();
 		const fileId = form.get('fileId');
-		console.log('setActive form data:', {
-			allKeys: Array.from(form.keys()),
-			fileId,
-			fileIdType: typeof fileId
-		});
 		if (typeof fileId !== 'string') {
-			console.error('Invalid fileId, returning 400');
 			return fail(400, { error: 'Missing or invalid file ID' });
 		}
 		try {
-			console.log('Setting file as active:', fileId);
 			await setCurrentFile(fileId);
-			console.log('File activated and links updated');
 			return { success: true };
 		} catch (error) {
-			console.error('Error setting active file:', error);
-			return fail(400, { error: (error as Error).message });
+			logError('csv_set_active_failed', { error, fileId });
+			return fail(400, { error: mapActionError(error, 'Unable to set active file') });
 		}
 	},
 	delete: async ({ request }) => {
@@ -85,7 +93,8 @@ export const actions: Actions = {
 			await deleteFile(fileId);
 			return { success: true };
 		} catch (error) {
-			return fail(400, { error: (error as Error).message });
+			logError('csv_delete_failed', { error, fileId });
+			return fail(400, { error: mapActionError(error, 'Unable to delete file') });
 		}
 	}
 };
