@@ -92,15 +92,16 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 		}
 	}
 
-	return {
+	const result = {
 		status: 'ok',
 		name: link.name,
 		columns: displayColumns,
 		rows: displayRows,
 		total: filtered.length,
 		truncated: filtered.length > preview.length,
-		updateMessage: file.update_message
+		updateMessage: file.update_message ?? null
 	};
+	return result;
 };
 
 export const actions: Actions = {

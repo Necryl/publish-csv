@@ -21,6 +21,7 @@ export type StoredFile = {
 	enc_iv: string;
 	enc_tag: string;
 	update_message?: string | null;
+	uploaded_at?: string;
 };
 
 export type LinkDisplayOptions = {
@@ -46,11 +47,56 @@ export async function getCurrentFile(): Promise<StoredFile | null> {
 }
 
 export async function setCurrentFile(fileId: string): Promise<void> {
-	await supabase.from('app_settings').upsert({
+	console.log('setCurrentFile called with:', fileId);
+
+	const { error } = await supabase.from('app_settings').upsert({
 		key: 'current_file_id',
 		value: { id: fileId },
 		updated_at: new Date().toISOString()
 	});
+
+	if (error) {
+		console.error('Error setting active file:', error);
+		throw error;
+	}
+
+	console.log('File activated:', fileId);
+}
+
+export async function updateFileMessage(fileId: string, message: string | null): Promise<void> {
+	const { error } = await supabase
+		.from('csv_files')
+		.update({ update_message: message })
+		.eq('id', fileId);
+	if (error) {
+		throw new Error(error.message);
+	}
+}
+
+export async function getAllFiles(): Promise<StoredFile[]> {
+	const { data, error } = await supabase
+		.from('csv_files')
+		.select('*')
+		.order('uploaded_at', { ascending: false });
+	if (error || !data) return [];
+	return data;
+}
+
+export async function deleteFile(fileId: string): Promise<void> {
+	const file = await supabase
+		.from('csv_files')
+		.select('storage_path')
+		.eq('id', fileId)
+		.maybeSingle();
+
+	if (file.data?.storage_path) {
+		await supabase.storage.from('csv').remove([file.data.storage_path]);
+	}
+
+	const { error } = await supabase.from('csv_files').delete().eq('id', fileId);
+	if (error) {
+		throw new Error(error.message);
+	}
 }
 
 export async function uploadEncryptedCsv(
@@ -90,8 +136,6 @@ export async function uploadEncryptedCsv(
 	if (error || !data) {
 		throw new Error(error?.message ?? 'Unable to save file');
 	}
-	await setCurrentFile(data.id);
-	await supabase.from('access_links').update({ file_id: data.id }).neq('id', '');
 	return data;
 }
 

@@ -88,7 +88,7 @@
 		{:else if data.status === 'ok'}
 			<div class="rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6">
 				<h1 class="text-xl font-semibold">{data.name}</h1>
-				{#if data.updateMessage}
+				{#if data.updateMessage && data.updateMessage.trim()}
 					<p class="mt-2 text-sm text-[var(--muted)]">Updated: {data.updateMessage}</p>
 				{/if}
 			</div>
