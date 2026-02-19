@@ -3,7 +3,26 @@
 	let rows = $derived(data.rows ?? []);
 	let columns = $derived(data.columns ?? []);
 	let total = $derived(data.total ?? 0);
+	let pageTitle = $derived.by(() => {
+		if (data.status === 'ok') return `${data.name} - Publish CSV`;
+		if (data.status === 'locked') return `${data.name} - Unlock`;
+		return 'Link inactive - Publish CSV';
+	});
+	let pageDescription = $derived.by(() => {
+		if (data.status === 'ok') return 'Secure CSV view. Filtered rows only.';
+		if (data.status === 'locked') return 'Enter the one-time password to unlock this link.';
+		return 'This link is inactive.';
+	});
 </script>
+
+<svelte:head>
+	<title>{pageTitle}</title>
+	<meta name="description" content={pageDescription} />
+	<meta property="og:title" content={pageTitle} />
+	<meta property="og:description" content={pageDescription} />
+	<meta property="og:type" content="website" />
+	<meta name="twitter:card" content="summary" />
+</svelte:head>
 
 <div class="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
 	<div class="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-10">
