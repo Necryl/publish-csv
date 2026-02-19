@@ -9,10 +9,10 @@
 		<div
 			class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
 		>
-			<div>
+			<a href="/" class="hover:text-[var(--accent)]">
 				<div class="text-xs tracking-[0.3em] text-[var(--muted)] uppercase">Publish CSV</div>
 				<div class="text-xl font-semibold">Admin Console</div>
-			</div>
+			</a>
 			{#if !$page.url.pathname.includes('/login')}
 				<nav class="flex flex-wrap items-center gap-3 text-xs sm:gap-4 sm:text-sm">
 					<a class="hover:text-[var(--accent)]" href="/admin">Overview</a>
