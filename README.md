@@ -68,6 +68,7 @@ ADMIN_EMAIL=
 ADMIN_PASSWORD=
 ENCRYPTION_MASTER_KEY=
 COOKIE_SECRET=
+CLEANUP_SECRET=
 ```
 
 Generate keys (run twice, once per variable):
@@ -75,6 +76,16 @@ Generate keys (run twice, once per variable):
 ```sh
 bun -e "console.log(crypto.randomBytes(32).toString('base64'))"
 ```
+
+## Data retention & free plan management
+
+To keep Supabase free tier usage under control, automatic cleanup runs daily:
+
+- **Audit logs** are cleaned after 90 days
+- **Recovery requests** (denied/resolved) are cleaned after 30 days
+- **Link devices** are kept indefinitely and managed manually (not auto-deleted)
+
+Cleanup runs automatically on server startup and once per 24 hours. No configuration needed.
 
 ## Security notes
 
