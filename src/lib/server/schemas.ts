@@ -7,7 +7,7 @@ export const adminLoginSchema = z.object({
 
 export const createLinkSchema = z.object({
 	name: z.string().min(1, 'Link name required').max(100, 'Link name too long'),
-	password: z.string().min(6, 'Password too short'),
+	password: z.string().min(1, 'Password required'),
 	criteria: z.string().default('[]'),
 	showSerial: z.boolean().default(false),
 	hideFirstColumn: z.boolean().default(false)
