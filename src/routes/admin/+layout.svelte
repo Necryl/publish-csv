@@ -28,7 +28,7 @@
 			</nav>
 		</div>
 	</header>
-	<main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+	<main class="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6 sm:px-6 sm:py-8">
 		{@render children()}
 	</main>
 </div>

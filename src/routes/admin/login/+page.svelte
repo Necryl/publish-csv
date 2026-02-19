@@ -3,7 +3,7 @@
 	let { form } = $props();
 </script>
 
-<div class="flex h-full flex-col items-center justify-center px-4">
+<div class="flex flex-1 flex-col items-center justify-center px-4">
 	<div class="w-full max-w-lg">
 		<div
 			class="w-full rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] p-6 shadow-lg sm:p-8"
