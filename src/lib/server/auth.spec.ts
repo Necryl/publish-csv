@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-const envValues = vi.hoisted(() => ({
+const envValues = vi.hoisted<Record<string, string>>(() => ({
 	ADMIN_EMAIL: 'admin@example.com',
 	ADMIN_PASSWORD: 'StrongPass123',
 	COOKIE_SECRET: 'cookie-secret',

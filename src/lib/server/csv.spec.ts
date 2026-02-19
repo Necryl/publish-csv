@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyCriteria, inferSchema, parseCsv } from './csv';
+import type { CsvSchema } from './csv';
 
 const cleanSampleCsv = `name,age,joined\nAlice,30,2024-01-15\nBob,41,2024-02-01`;
 const mixedSampleCsv = `name,age,joined\nAlice,30,2024-01-15\nBob,not-a-number,invalid-date\nCara,,2023-05-01`;
@@ -22,7 +23,7 @@ describe('csv helpers', () => {
 
 	it('filters rows and ignores invalid numeric/date values', () => {
 		const parsed = parseCsv(mixedSampleCsv);
-		const schema = {
+		const schema: CsvSchema = {
 			columns: [
 				{ name: 'name', type: 'string' },
 				{ name: 'age', type: 'number' },
@@ -40,7 +41,7 @@ describe('csv helpers', () => {
 
 	it('does not match empty numeric cells against numeric rules', () => {
 		const parsed = parseCsv(mixedSampleCsv);
-		const schema = {
+		const schema: CsvSchema = {
 			columns: [
 				{ name: 'name', type: 'string' },
 				{ name: 'age', type: 'number' },
