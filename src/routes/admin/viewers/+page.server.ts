@@ -1,9 +1,18 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { listApprovedRequests, listLinkDevices, revokeViewerDevice } from '$lib/server/db';
+import {
+	listApprovedRequests,
+	listLinkDevices,
+	revokeViewerDevice,
+	listLinks
+} from '$lib/server/db';
 
 export const load: PageServerLoad = async () => {
-	const [devices, approved] = await Promise.all([listLinkDevices(), listApprovedRequests()]);
+	const [devices, approved, links] = await Promise.all([
+		listLinkDevices(),
+		listApprovedRequests(),
+		listLinks()
+	]);
 
 	const approvalById = new Map<string, (typeof approved)[number]>();
 	for (const request of approved) {
@@ -29,7 +38,7 @@ export const load: PageServerLoad = async () => {
 		};
 	});
 
-	return { viewers };
+	return { viewers, links };
 };
 
 export const actions: Actions = {

@@ -1,11 +1,16 @@
 import type { Actions, PageServerLoad } from './$types';
-import { approveRequest, denyRequest, listRequests } from '$lib/server/db';
+import { approveRequest, denyRequest, listRequests, listLinks } from '$lib/server/db';
 import { getRateLimitKey, rateLimit } from '$lib/server/rateLimit';
 import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async () => {
-	const requests = await listRequests();
-	return { requests };
+	const [requests, links] = await Promise.all([listRequests(), listLinks()]);
+	const linkNameById = new Map(links.map((link) => [link.id, link.name]));
+	const requestsWithLinkNames = requests.map((req) => ({
+		...req,
+		linkName: linkNameById.get(req.link_id) ?? 'Untitled link'
+	}));
+	return { requests: requestsWithLinkNames, links };
 };
 
 export const actions: Actions = {

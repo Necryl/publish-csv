@@ -6,7 +6,12 @@ export type CsvSchema = {
 };
 
 export type CsvCriteriaOp = 'eq' | 'contains' | 'gt' | 'gte' | 'lt' | 'lte';
-export type CsvCriteria = { column: string; op: CsvCriteriaOp; value: string };
+export type CsvCriteria = {
+	column: string;
+	op: CsvCriteriaOp;
+	value: string;
+	caseSensitive?: boolean;
+};
 
 const MAX_CSV_SIZE_MB = 10;
 const MAX_CSV_SIZE_BYTES = MAX_CSV_SIZE_MB * 1024 * 1024;
@@ -95,10 +100,20 @@ function matchRule(
 	if (left === null || right === null) return false;
 
 	switch (rule.op) {
-		case 'eq':
+		case 'eq': {
+			if (type === 'string' && !rule.caseSensitive) {
+				return String(left).toLowerCase() === String(right).toLowerCase();
+			}
 			return left === right;
-		case 'contains':
-			return String(left).toLowerCase().includes(String(right).toLowerCase());
+		}
+		case 'contains': {
+			const leftStr = String(left);
+			const rightStr = String(right);
+			if (rule.caseSensitive) {
+				return leftStr.includes(rightStr);
+			}
+			return leftStr.toLowerCase().includes(rightStr.toLowerCase());
+		}
 		case 'gt':
 			return Number(left) > Number(right);
 		case 'gte':

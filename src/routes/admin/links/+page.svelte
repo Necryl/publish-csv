@@ -35,15 +35,23 @@
 	const columnType = (name: string) =>
 		columns.find((column: { name: string }) => column.name === name)?.type ?? 'string';
 
+	const isCaseSensitiveApplicable = (column: string, op: CsvCriteria['op']) => {
+		const type = columnType(column);
+		return type === 'string' && (op === 'eq' || op === 'contains');
+	};
+
 	const addRule = () => {
-		criteria = [...criteria, { column: columns[0]?.name ?? '', op: 'eq', value: '' }];
+		criteria = [
+			...criteria,
+			{ column: columns[0]?.name ?? '', op: 'eq', value: '', caseSensitive: false }
+		];
 	};
 
 	const removeRule = (index: number) => {
 		criteria = criteria.filter((_, idx) => idx !== index);
 	};
 
-	const updateRule = (index: number, key: keyof CsvCriteria, value: string) => {
+	const updateRule = (index: number, key: keyof CsvCriteria, value: string | boolean) => {
 		criteria = criteria.map((rule, idx) => (idx === index ? { ...rule, [key]: value } : rule));
 	};
 
@@ -138,7 +146,7 @@
 					<p class="text-sm font-semibold">Filters</p>
 					{#each criteria as rule, index (index)}
 						<div
-							class="grid gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-3 md:grid-cols-[1fr_1fr_1fr_auto]"
+							class="grid gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-3 md:grid-cols-[1fr_1fr_1fr_auto_auto]"
 						>
 							<select
 								class="rounded-md border border-[var(--line)] bg-transparent px-2 py-2 text-sm"
@@ -164,6 +172,21 @@
 								value={rule.value}
 								oninput={(event) => updateRule(index, 'value', event.currentTarget.value)}
 							/>
+							<label
+								class="flex items-center gap-2 px-2 py-2 text-xs"
+								class:text-[var(--muted)]={!isCaseSensitiveApplicable(rule.column, rule.op)}
+								class:opacity-50={!isCaseSensitiveApplicable(rule.column, rule.op)}
+							>
+								<input
+									class="rounded border border-[var(--line)]"
+									type="checkbox"
+									disabled={!isCaseSensitiveApplicable(rule.column, rule.op)}
+									checked={rule.caseSensitive ?? false}
+									onchange={(event) =>
+										updateRule(index, 'caseSensitive', event.currentTarget.checked)}
+								/>
+								<span>Case sensitive</span>
+							</label>
 							<button
 								class="rounded-md border border-[var(--line)] px-3 py-2 text-xs text-[var(--muted)] hover:text-[var(--accent)]"
 								type="button"
@@ -235,6 +258,9 @@
 									<span>
 										{criterion.column}
 										{criterion.op === 'eq' ? '=' : criterion.op} "{criterion.value}"
+										{#if (criterion.op === 'eq' || criterion.op === 'contains') && criterion.column && columnType(criterion.column) === 'string'}
+											{criterion.caseSensitive ? ' (case sensitive)' : ' (case insensitive)'}
+										{/if}
 										{idx < link.criteria.length - 1 ? ',' : ''}
 									</span>
 									<br />
