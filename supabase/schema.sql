@@ -18,7 +18,8 @@ create table if not exists csv_files (
 	row_count integer not null,
 	enc_salt text not null,
 	enc_iv text not null,
-	enc_tag text not null
+	enc_tag text not null,
+	update_message text
 );
 
 create table if not exists access_links (

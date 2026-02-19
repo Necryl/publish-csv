@@ -98,7 +98,8 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 		columns: displayColumns,
 		rows: displayRows,
 		total: filtered.length,
-		truncated: filtered.length > preview.length
+		truncated: filtered.length > preview.length,
+		updateMessage: file.update_message
 	};
 };
 

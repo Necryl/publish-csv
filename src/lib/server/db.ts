@@ -20,6 +20,7 @@ export type StoredFile = {
 	enc_salt: string;
 	enc_iv: string;
 	enc_tag: string;
+	update_message?: string | null;
 };
 
 export type LinkDisplayOptions = {
@@ -55,7 +56,8 @@ export async function setCurrentFile(fileId: string): Promise<void> {
 export async function uploadEncryptedCsv(
 	file: File,
 	parsed: { rows: Record<string, string>[]; headers: string[] },
-	schema: CsvSchema
+	schema: CsvSchema,
+	updateMessage?: string | null
 ): Promise<StoredFile> {
 	const payload = Buffer.from(await file.arrayBuffer());
 	const encrypted = encryptBuffer(payload);
@@ -80,7 +82,8 @@ export async function uploadEncryptedCsv(
 			row_count: parsed.rows.length,
 			enc_salt: encrypted.saltHex,
 			enc_iv: encrypted.ivHex,
-			enc_tag: encrypted.tagHex
+			enc_tag: encrypted.tagHex,
+			update_message: updateMessage || null
 		})
 		.select('*')
 		.single();

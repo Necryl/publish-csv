@@ -12,6 +12,7 @@ export const actions: Actions = {
 	upload: async ({ request }) => {
 		const form = await request.formData();
 		const file = form.get('file');
+		const updateMessage = form.get('updateMessage');
 		if (!(file instanceof File)) {
 			return fail(400, { error: 'Missing file' });
 		}
@@ -22,7 +23,8 @@ export const actions: Actions = {
 				return fail(400, { error: 'CSV must include headers' });
 			}
 			const schema = inferSchema(parsed.rows, parsed.headers);
-			const stored = await uploadEncryptedCsv(file, parsed, schema);
+			const messageValue = typeof updateMessage === 'string' ? updateMessage.trim() : null;
+			const stored = await uploadEncryptedCsv(file, parsed, schema, messageValue);
 			return { success: true, fileId: stored.id };
 		} catch (error) {
 			return fail(400, { error: (error as Error).message });

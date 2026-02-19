@@ -21,6 +21,15 @@
 					required
 				/>
 			</label>
+			<label class="grid gap-2 text-sm">
+				<span>Update message <span class="text-[var(--muted)]">(optional)</span></span>
+				<input
+					class="rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
+					type="text"
+					name="updateMessage"
+					placeholder="e.g., Fixed data, Added new columns..."
+				/>
+			</label>
 			{#if form?.error}
 				<p class="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
 					{form.error}
