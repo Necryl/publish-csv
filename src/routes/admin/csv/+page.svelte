@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { submitBusy } from '$lib/submit-busy';
 	let { data, form } = $props();
 </script>
 
@@ -9,7 +10,7 @@
 			Upload a CSV to replace the current encrypted file. Existing links will point to the new file.
 		</p>
 
-		<form class="mt-6 grid gap-4" method="post" enctype="multipart/form-data">
+		<form class="mt-6 grid gap-4" method="post" enctype="multipart/form-data" use:submitBusy>
 			<label class="grid gap-2 text-sm">
 				<span>CSV file</span>
 				<input

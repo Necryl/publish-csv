@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { submitBusy } from '$lib/submit-busy';
 	let { data, form } = $props();
 	let rows = $derived(data.rows ?? []);
 	let columns = $derived(data.columns ?? []);
@@ -36,7 +37,7 @@
 				<p class="mt-2 text-sm text-[var(--muted)]">
 					Enter the one-time password to unlock this link on your device.
 				</p>
-				<form class="mt-6 grid gap-3" method="post">
+				<form class="mt-6 grid gap-3" method="post" use:submitBusy>
 					<label class="grid gap-2 text-sm">
 						<span>Password</span>
 						<input
@@ -66,7 +67,7 @@
 				<p class="mt-2 text-sm text-[var(--muted)]">
 					If you cannot access this device, send a request to the admin.
 				</p>
-				<form class="mt-4 grid gap-3" method="post">
+				<form class="mt-4 grid gap-3" method="post" use:submitBusy>
 					<label class="grid gap-2 text-sm">
 						<span>Message</span>
 						<textarea

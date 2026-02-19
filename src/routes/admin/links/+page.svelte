@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { submitBusy } from '$lib/submit-busy';
 	import type { CsvCriteria, CsvColumnType } from '$lib/server/csv';
 
 	let { data, form } = $props();
@@ -42,6 +43,15 @@
 	const updateRule = (index: number, key: keyof CsvCriteria, value: string) => {
 		criteria = criteria.map((rule, idx) => (idx === index ? { ...rule, [key]: value } : rule));
 	};
+
+	const copyLink = async (url: string) => {
+		try {
+			await navigator.clipboard.writeText(url);
+		} catch {
+			// Clipboard may be blocked; fallback to prompt.
+			window.prompt('Copy link:', url);
+		}
+	};
 </script>
 
 <section class="grid gap-6">
@@ -50,7 +60,7 @@
 		{#if !columns.length}
 			<p class="mt-2 text-sm text-[var(--muted)]">Upload a CSV before creating links.</p>
 		{:else}
-			<form class="mt-4 grid gap-4" method="post">
+			<form class="mt-4 grid gap-4" method="post" use:submitBusy>
 				<label class="grid gap-2 text-sm">
 					<span>Label</span>
 					<input
@@ -143,27 +153,46 @@
 				{#each data.links as link (link.id)}
 					<div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
 						<div class="flex flex-wrap items-center justify-between gap-3">
-							<div>
-								<p class="text-sm font-semibold">{link.name}</p>
-								<p class="text-xs text-[var(--muted)]">{link.id}</p>
-							</div>
+							<form class="flex flex-wrap items-center gap-2" method="post" use:submitBusy>
+								<input type="hidden" name="id" value={link.id} />
+								<input
+									class="rounded-md border border-[var(--line)] bg-transparent px-2 py-1 text-sm font-semibold"
+									name="name"
+									value={link.name}
+								/>
+								<button
+									class="rounded-md border border-[var(--line)] px-2 py-1 text-xs hover:text-[var(--accent)]"
+									formaction="?/rename"
+									type="submit"
+								>
+									Save
+								</button>
+							</form>
 							<div class="text-xs text-[var(--muted)]">
 								{link.active ? 'Active' : 'Disabled'}
 							</div>
 						</div>
-						<p class="mt-2 text-xs text-[var(--muted)]">
-							Link: {data.baseUrl}{link.id}
-						</p>
-						<form class="mt-3" method="post">
-							<input type="hidden" name="id" value={link.id} />
+						<p class="mt-2 text-xs text-[var(--muted)]">{link.id}</p>
+						<div class="mt-3 flex flex-wrap items-center gap-2">
+							<span class="text-xs text-[var(--muted)]">Link: {data.baseUrl}{link.id}</span>
 							<button
-								class="rounded-md border border-[var(--line)] px-3 py-1 text-xs hover:text-[var(--accent)]"
-								formaction={link.active ? '?/deactivate' : '?/activate'}
-								type="submit"
+								class="rounded-md border border-[var(--line)] px-2 py-1 text-xs hover:text-[var(--accent)]"
+								onclick={() => copyLink(`${data.baseUrl}${link.id}`)}
+								type="button"
 							>
-								{link.active ? 'Deactivate' : 'Activate'}
+								Copy
 							</button>
-						</form>
+							<form method="post" use:submitBusy>
+								<input type="hidden" name="id" value={link.id} />
+								<button
+									class="rounded-md border border-[var(--line)] px-3 py-1 text-xs hover:text-[var(--accent)]"
+									formaction={link.active ? '?/deactivate' : '?/activate'}
+									type="submit"
+								>
+									{link.active ? 'Deactivate' : 'Activate'}
+								</button>
+							</form>
+						</div>
 					</div>
 				{/each}
 			</div>

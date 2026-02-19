@@ -18,3 +18,31 @@ body {
 	min-height: 100vh;
 	background-image: radial-gradient(circle at top, rgba(42, 111, 98, 0.08), transparent 60%);
 }
+
+button {
+	transition:
+		transform 120ms ease,
+		filter 120ms ease,
+		box-shadow 120ms ease,
+		background-color 120ms ease,
+		color 120ms ease,
+		border-color 120ms ease;
+}
+
+button:hover {
+	filter: brightness(1.02);
+	border-color: var(--ink);
+}
+
+button:active {
+	transform: translateY(2px) scale(0.98);
+	filter: none;
+	background-color: var(--ink);
+	color: var(--surface);
+	border-color: var(--ink);
+}
+
+button:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}

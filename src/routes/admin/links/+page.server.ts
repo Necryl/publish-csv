@@ -1,6 +1,12 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { createAccessLink, getCurrentFile, listLinks, toggleLink } from '$lib/server/db';
+import {
+	createAccessLink,
+	getCurrentFile,
+	listLinks,
+	toggleLink,
+	updateLinkLabel
+} from '$lib/server/db';
 import type { CsvCriteria } from '$lib/server/csv';
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -53,6 +59,14 @@ export const actions: Actions = {
 		const id = String(form.get('id') ?? '');
 		if (!id) return fail(400, { error: 'Missing link id' });
 		await toggleLink(id, true);
+		return { success: true };
+	},
+	rename: async ({ request }) => {
+		const form = await request.formData();
+		const id = String(form.get('id') ?? '');
+		const name = String(form.get('name') ?? '').trim();
+		if (!id || !name) return fail(400, { error: 'Missing link id or name' });
+		await updateLinkLabel(id, name);
 		return { success: true };
 	}
 };

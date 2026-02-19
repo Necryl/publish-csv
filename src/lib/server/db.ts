@@ -165,6 +165,10 @@ export async function toggleLink(linkId: string, active: boolean): Promise<void>
 	await supabase.from('access_links').update({ active }).eq('id', linkId);
 }
 
+export async function updateLinkLabel(linkId: string, name: string): Promise<void> {
+	await supabase.from('access_links').update({ name }).eq('id', linkId);
+}
+
 export async function listRequests(): Promise<any[]> {
 	const { data } = await supabase
 		.from('recovery_requests')

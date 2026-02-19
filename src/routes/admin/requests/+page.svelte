@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { submitBusy } from '$lib/submit-busy';
 	let { data, form } = $props();
 </script>
 
@@ -22,7 +23,7 @@
 					{/if}
 					{#if request.status === 'pending'}
 						<div class="mt-3 flex gap-2">
-							<form method="post">
+							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={request.id} />
 								<button
 									class="rounded-md bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-white"
@@ -32,7 +33,7 @@
 									Approve
 								</button>
 							</form>
-							<form method="post">
+							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={request.id} />
 								<button
 									class="rounded-md border border-[var(--line)] px-3 py-1 text-xs"

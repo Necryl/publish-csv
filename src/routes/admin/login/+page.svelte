@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { submitBusy } from '$lib/submit-busy';
 	let { form } = $props();
 </script>
 
@@ -10,7 +11,7 @@
 				Single-session login. Any other admin session is revoked.
 			</p>
 
-			<form class="mt-6 grid gap-4" method="post">
+			<form class="mt-6 grid gap-4" method="post" use:submitBusy>
 				<label class="grid gap-2 text-sm">
 					<span>Email</span>
 					<input
