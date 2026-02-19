@@ -14,6 +14,7 @@ import { applyCriteria } from '$lib/server/csv';
 import { hashDeviceFingerprint, signCookieValue, verifySignedCookie } from '$lib/server/crypto';
 import { getRateLimitKey, rateLimit } from '$lib/server/rateLimit';
 import { recoveryRequestSchema } from '$lib/server/schemas';
+import { validateAdminSession } from '$lib/server/auth';
 import { dev } from '$app/environment';
 
 const MAX_ROWS = 500;
@@ -33,37 +34,44 @@ export const load: PageServerLoad = async ({ params, cookies, request, getClient
 	if (!link || !link.active) {
 		return { status: 'inactive' };
 	}
-	const userAgent = request.headers.get('user-agent') ?? '';
-	const acceptLanguage = request.headers.get('accept-language') ?? '';
-	const clientIp = getClientAddress?.() ?? 'unknown';
-	const deviceHash = hashDeviceFingerprint(userAgent, acceptLanguage, clientIp);
-	const deviceCookie = cookies.get(deviceCookieName(link.id));
-	let authorized = false;
 
-	if (deviceCookie) {
-		const raw = verifySignedCookie(deviceCookie);
-		if (raw) {
-			authorized = await validateDevice(link.id, raw, deviceHash);
-		}
-	}
+	// Check if admin is logged in - admins get automatic access
+	const userAgent = request.headers.get('user-agent') ?? '';
+	const adminCookie = cookies.get('admin_session');
+	const isAdmin = await validateAdminSession(adminCookie, userAgent);
+	let authorized = isAdmin;
 
 	if (!authorized) {
-		const requestCookie = cookies.get(requestCookieName(link.id));
-		if (requestCookie) {
-			const raw = verifySignedCookie(requestCookie);
+		const acceptLanguage = request.headers.get('accept-language') ?? '';
+		const clientIp = getClientAddress?.() ?? 'unknown';
+		const deviceHash = hashDeviceFingerprint(userAgent, acceptLanguage, clientIp);
+		const deviceCookie = cookies.get(deviceCookieName(link.id));
+
+		if (deviceCookie) {
+			const raw = verifySignedCookie(deviceCookie);
 			if (raw) {
-				const approved = await checkApprovedRequest(raw);
-				if (approved?.approved && approved.linkId === link.id) {
-					const token = await activateDevice(link.id, deviceHash, false, raw);
-					cookies.set(deviceCookieName(link.id), signCookieValue(token), {
-						path: '/',
-						httpOnly: true,
-						sameSite: 'strict',
-						secure: !dev,
-						maxAge: 60 * 60 * 24 * 30
-					});
-					cookies.delete(requestCookieName(link.id), { path: '/' });
-					authorized = true;
+				authorized = await validateDevice(link.id, raw, deviceHash);
+			}
+		}
+
+		if (!authorized) {
+			const requestCookie = cookies.get(requestCookieName(link.id));
+			if (requestCookie) {
+				const raw = verifySignedCookie(requestCookie);
+				if (raw) {
+					const approved = await checkApprovedRequest(raw);
+					if (approved?.approved && approved.linkId === link.id) {
+						const token = await activateDevice(link.id, deviceHash, false, raw);
+						cookies.set(deviceCookieName(link.id), signCookieValue(token), {
+							path: '/',
+							httpOnly: true,
+							sameSite: 'strict',
+							secure: !dev,
+							maxAge: 60 * 60 * 24 * 30
+						});
+						cookies.delete(requestCookieName(link.id), { path: '/' });
+						authorized = true;
+					}
 				}
 			}
 		}

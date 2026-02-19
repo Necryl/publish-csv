@@ -28,7 +28,13 @@ const rateLimitMocks = vi.hoisted(() => ({
 
 vi.mock('$lib/server/rateLimit', () => rateLimitMocks);
 
-import { actions } from '../../../routes/v/[linkId]/+page.server';
+const authMocks = vi.hoisted(() => ({
+	validateAdminSession: vi.fn(() => Promise.resolve(false))
+}));
+
+vi.mock('$lib/server/auth', () => authMocks);
+
+import { actions, load } from '../../../routes/v/[linkId]/+page.server';
 
 const makeEvent = (fields: Record<string, string>) => {
 	const form = new FormData();
@@ -44,7 +50,36 @@ const makeEvent = (fields: Record<string, string>) => {
 };
 
 describe('viewer actions', () => {
+	it('allows admin to bypass link password', async () => {
+		authMocks.validateAdminSession.mockResolvedValue(true);
+		dbMocks.getLinkWithFile.mockResolvedValue({
+			id: 'link-1',
+			name: 'Test Link',
+			active: true,
+			criteria: []
+		});
+		dbMocks.getCurrentFile.mockResolvedValue({
+			schema: { columns: [{ name: 'col1' }] }
+		});
+		dbMocks.fetchCsvRows.mockResolvedValue([{ col1: 'data' }]);
+
+		const event = {
+			params: { linkId: 'link-1' },
+			request: new Request('http://localhost/v/link-1'),
+			cookies: { get: vi.fn(() => 'admin-session-cookie'), set: vi.fn(), delete: vi.fn() },
+			getClientAddress: () => '127.0.0.1'
+		};
+
+		const result = (await load(event as never)) as { status: string };
+		expect(result.status).toBe('ok');
+		expect(authMocks.validateAdminSession).toHaveBeenCalledWith(
+			'admin-session-cookie',
+			expect.any(String)
+		);
+	});
+
 	it('returns a friendly error when OTP is already used', async () => {
+		authMocks.validateAdminSession.mockResolvedValue(false);
 		dbMocks.verifyLinkPassword.mockResolvedValue({ valid: true, alreadyUsed: false });
 		dbMocks.activateDevice.mockRejectedValue(new Error('Password already used'));
 
@@ -54,6 +89,7 @@ describe('viewer actions', () => {
 	});
 
 	it('submits a recovery request and sets a cookie', async () => {
+		authMocks.validateAdminSession.mockResolvedValue(false);
 		dbMocks.submitRecoveryRequest.mockResolvedValue('request-1');
 
 		const event = makeEvent({ message: 'Please approve.' });
