@@ -83,16 +83,33 @@ export async function getAllFiles(): Promise<StoredFile[]> {
 }
 
 export async function deleteFile(fileId: string): Promise<void> {
+	// Get the current active file
+	const currentFile = await getCurrentFile();
+
+	// If deleting the active file, clear it from app_settings
+	if (currentFile?.id === fileId) {
+		const { error: clearError } = await supabase
+			.from('app_settings')
+			.delete()
+			.eq('key', 'current_file_id');
+		if (clearError) {
+			throw clearError;
+		}
+	}
+
+	// Get file storage path
 	const file = await supabase
 		.from('csv_files')
 		.select('storage_path')
 		.eq('id', fileId)
 		.maybeSingle();
 
+	// Delete from storage
 	if (file.data?.storage_path) {
 		await supabase.storage.from('csv').remove([file.data.storage_path]);
 	}
 
+	// Delete from database
 	const { error } = await supabase.from('csv_files').delete().eq('id', fileId);
 	if (error) {
 		throw new Error(error.message);

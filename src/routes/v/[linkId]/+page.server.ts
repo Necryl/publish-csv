@@ -73,7 +73,14 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 	if (!file) {
 		return { status: 'inactive' };
 	}
-	const rows = await fetchCsvRows(file);
+
+	let rows: Row[] = [];
+	try {
+		rows = await fetchCsvRows(file);
+	} catch (error) {
+		console.error('Error fetching CSV rows:', error);
+		return { status: 'inactive' };
+	}
 	const filtered = applyCriteria(rows, file.schema, link.criteria ?? []);
 	const preview: Row[] = filtered.slice(0, MAX_ROWS);
 	const options = link.display_options ?? { showSerial: false, hideFirstColumn: false };

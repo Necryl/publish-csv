@@ -25,7 +25,7 @@ create table if not exists csv_files (
 create table if not exists access_links (
 	id uuid primary key default gen_random_uuid(),
 	name text not null,
-	file_id uuid references csv_files(id) on delete restrict,
+	file_id uuid references csv_files(id) on delete set null,
 	criteria jsonb not null,
 	display_options jsonb not null default '{"showSerial": false, "hideFirstColumn": false}',
 	active boolean not null default true,
