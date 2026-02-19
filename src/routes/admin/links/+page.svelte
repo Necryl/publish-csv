@@ -77,6 +77,12 @@
 			JSON.stringify({ showSerial: showSerialDefault, hideFirstColumn: hideFirstColumnDefault })
 		);
 	};
+
+	const confirmDelete = (event: MouseEvent) => {
+		if (!window.confirm('Delete this link? This cannot be undone.')) {
+			event.preventDefault();
+		}
+	};
 </script>
 
 <section class="grid gap-6">
@@ -267,6 +273,17 @@
 									type="submit"
 								>
 									{link.active ? 'Deactivate' : 'Activate'}
+								</button>
+							</form>
+							<form method="post" use:submitBusy>
+								<input type="hidden" name="id" value={link.id} />
+								<button
+									class="rounded-md border border-red-300 px-3 py-1 text-xs text-red-600 hover:text-red-700"
+									formaction="?/delete"
+									type="submit"
+									onclick={confirmDelete}
+								>
+									Delete
 								</button>
 							</form>
 						</div>

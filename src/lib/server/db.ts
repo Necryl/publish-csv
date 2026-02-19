@@ -188,6 +188,10 @@ export async function updateLinkOptions(
 	await supabase.from('access_links').update({ display_options: displayOptions }).eq('id', linkId);
 }
 
+export async function deleteLink(linkId: string): Promise<void> {
+	await supabase.from('access_links').delete().eq('id', linkId);
+}
+
 export async function listRequests(): Promise<any[]> {
 	const { data } = await supabase
 		.from('recovery_requests')

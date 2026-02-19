@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
 	createAccessLink,
+	deleteLink,
 	getCurrentFile,
 	listLinks,
 	toggleLink,
@@ -84,6 +85,13 @@ export const actions: Actions = {
 		const hideFirstColumn = form.get('hideFirstColumn') !== null;
 		if (!id) return fail(400, { error: 'Missing link id' });
 		await updateLinkOptions(id, { showSerial, hideFirstColumn });
+		return { success: true };
+	},
+	delete: async ({ request }) => {
+		const form = await request.formData();
+		const id = String(form.get('id') ?? '');
+		if (!id) return fail(400, { error: 'Missing link id' });
+		await deleteLink(id);
 		return { success: true };
 	}
 };
