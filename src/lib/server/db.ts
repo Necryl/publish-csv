@@ -232,7 +232,7 @@ export async function validateDevice(
 export async function listLinks(): Promise<any[]> {
 	const { data } = await supabase
 		.from('access_links')
-		.select('id, name, active, criteria, display_options, created_at')
+		.select('id, name, active, criteria, display_options, created_at, csv_files(schema)')
 		.order('created_at', { ascending: false });
 	return data ?? [];
 }

@@ -228,6 +228,23 @@
 							</div>
 						</div>
 						<p class="mt-2 text-xs break-all text-[var(--muted)]">{link.id}</p>
+						{#if link.criteria && link.criteria.length > 0}
+							<p class="mt-2 text-xs text-[var(--muted)]">
+								<span class="font-medium">Filters:</span>
+								{#each link.criteria as criterion, idx}
+									<span>
+										{criterion.column}
+										{criterion.op === 'eq' ? '=' : criterion.op} "{criterion.value}"
+										{idx < link.criteria.length - 1 ? ',' : ''}
+									</span>
+									<br />
+								{/each}
+							</p>
+						{:else}
+							<p class="mt-2 text-xs text-[var(--muted)]">
+								<span class="font-medium">Filters:</span> None
+							</p>
+						{/if}
 						<div class="mt-3 flex flex-wrap items-start gap-2 sm:items-center">
 							<span class="text-xs break-all text-[var(--muted)]">
 								Link: {data.baseUrl}{link.id}
