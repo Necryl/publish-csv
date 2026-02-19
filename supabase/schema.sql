@@ -26,6 +26,7 @@ create table if not exists access_links (
 	name text not null,
 	file_id uuid references csv_files(id) on delete restrict,
 	criteria jsonb not null,
+	display_options jsonb not null default '{"showSerial": false, "hideFirstColumn": false}',
 	active boolean not null default true,
 	password_salt text not null,
 	password_hash text not null,

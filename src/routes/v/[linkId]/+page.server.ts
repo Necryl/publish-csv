@@ -14,6 +14,8 @@ import { signCookieValue, verifySignedCookie } from '$lib/server/crypto';
 import { dev } from '$app/environment';
 
 const MAX_ROWS = 500;
+type Row = Record<string, string>;
+type Column = { name: string };
 
 function deviceCookieName(linkId: string): string {
 	return `link_${linkId}`;
@@ -71,13 +73,30 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 	}
 	const rows = await fetchCsvRows(file);
 	const filtered = applyCriteria(rows, file.schema, link.criteria ?? []);
-	const preview = filtered.slice(0, MAX_ROWS);
+	const preview: Row[] = filtered.slice(0, MAX_ROWS);
+	const options = link.display_options ?? { showSerial: false, hideFirstColumn: false };
+	const baseColumns: Column[] = file.schema.columns ?? [];
+	const visibleColumns: Column[] = options.hideFirstColumn ? baseColumns.slice(1) : baseColumns;
+	const serialLabel = 'No.';
+	const displayColumns: Column[] = options.showSerial
+		? [{ name: serialLabel }, ...visibleColumns]
+		: visibleColumns;
+	const displayRows: Row[] = options.showSerial
+		? preview.map((row, index) => ({ ...row, [serialLabel]: String(index + 1) }))
+		: preview;
+
+	if (options.hideFirstColumn && baseColumns.length > 0) {
+		const firstName = baseColumns[0].name;
+		for (const row of displayRows) {
+			delete row[firstName];
+		}
+	}
 
 	return {
 		status: 'ok',
 		name: link.name,
-		columns: file.schema.columns,
-		rows: preview,
+		columns: displayColumns,
+		rows: displayRows,
 		total: filtered.length,
 		truncated: filtered.length > preview.length
 	};

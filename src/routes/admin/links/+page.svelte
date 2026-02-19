@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { submitBusy } from '$lib/submit-busy';
 	import type { CsvCriteria, CsvColumnType } from '$lib/server/csv';
 
@@ -7,6 +8,8 @@
 
 	let criteria = $state<CsvCriteria[]>([]);
 	let criteriaJson = $derived(JSON.stringify(criteria));
+	let showSerialDefault = $state(false);
+	let hideFirstColumnDefault = $state(false);
 
 	const operators: Record<CsvColumnType, { label: string; value: CsvCriteria['op'] }[]> = {
 		string: [
@@ -52,6 +55,28 @@
 			window.prompt('Copy link:', url);
 		}
 	};
+
+	const storageKey = 'publishCsv:linkOptions';
+
+	onMount(() => {
+		const raw = window.localStorage.getItem(storageKey);
+		if (!raw) return;
+		try {
+			const parsed = JSON.parse(raw) as { showSerial?: boolean; hideFirstColumn?: boolean };
+			showSerialDefault = !!parsed.showSerial;
+			hideFirstColumnDefault = !!parsed.hideFirstColumn;
+		} catch {
+			return;
+		}
+	});
+
+	const persistDefaults = () => {
+		if (typeof window === 'undefined') return;
+		window.localStorage.setItem(
+			storageKey,
+			JSON.stringify({ showSerial: showSerialDefault, hideFirstColumn: hideFirstColumnDefault })
+		);
+	};
 </script>
 
 <section class="grid gap-6">
@@ -78,6 +103,30 @@
 						required
 					/>
 				</label>
+
+				<div class="grid gap-2 text-sm">
+					<p class="font-semibold">Viewer options</p>
+					<label class="flex items-center gap-2">
+						<input
+							class="rounded border border-[var(--line)]"
+							type="checkbox"
+							name="showSerial"
+							bind:checked={showSerialDefault}
+							onchange={persistDefaults}
+						/>
+						<span>Add serial number column</span>
+					</label>
+					<label class="flex items-center gap-2">
+						<input
+							class="rounded border border-[var(--line)]"
+							type="checkbox"
+							name="hideFirstColumn"
+							bind:checked={hideFirstColumnDefault}
+							onchange={persistDefaults}
+						/>
+						<span>Hide first CSV column</span>
+					</label>
+				</div>
 
 				<div class="grid gap-3">
 					<p class="text-sm font-semibold">Filters</p>
@@ -182,6 +231,34 @@
 							>
 								Copy
 							</button>
+							<form class="flex flex-wrap items-center gap-2" method="post" use:submitBusy>
+								<input type="hidden" name="id" value={link.id} />
+								<label class="flex items-center gap-1 text-xs text-[var(--muted)]">
+									<input
+										class="rounded border border-[var(--line)]"
+										type="checkbox"
+										name="showSerial"
+										checked={link.display_options?.showSerial ?? false}
+									/>
+									<span>Serial</span>
+								</label>
+								<label class="flex items-center gap-1 text-xs text-[var(--muted)]">
+									<input
+										class="rounded border border-[var(--line)]"
+										type="checkbox"
+										name="hideFirstColumn"
+										checked={link.display_options?.hideFirstColumn ?? false}
+									/>
+									<span>Hide first</span>
+								</label>
+								<button
+									class="rounded-md border border-[var(--line)] px-2 py-1 text-xs hover:text-[var(--accent)]"
+									formaction="?/updateOptions"
+									type="submit"
+								>
+									Update
+								</button>
+							</form>
 							<form method="post" use:submitBusy>
 								<input type="hidden" name="id" value={link.id} />
 								<button

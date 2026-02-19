@@ -22,6 +22,16 @@ export type StoredFile = {
 	enc_tag: string;
 };
 
+export type LinkDisplayOptions = {
+	showSerial: boolean;
+	hideFirstColumn: boolean;
+};
+
+export const defaultDisplayOptions: LinkDisplayOptions = {
+	showSerial: false,
+	hideFirstColumn: false
+};
+
 export async function getCurrentFile(): Promise<StoredFile | null> {
 	const { data: setting } = await supabase
 		.from('app_settings')
@@ -94,6 +104,7 @@ export async function createAccessLink(input: {
 	name: string;
 	criteria: CsvCriteria[];
 	password: string;
+	displayOptions: LinkDisplayOptions;
 }): Promise<{ id: string }> {
 	const file = await getCurrentFile();
 	if (!file) throw new Error('No active CSV file');
@@ -105,6 +116,7 @@ export async function createAccessLink(input: {
 			name: input.name,
 			file_id: file.id,
 			criteria: input.criteria,
+			display_options: input.displayOptions,
 			password_salt: salt,
 			password_hash: passwordHash
 		})
@@ -156,7 +168,7 @@ export async function validateDevice(
 export async function listLinks(): Promise<any[]> {
 	const { data } = await supabase
 		.from('access_links')
-		.select('id, name, active, criteria, created_at')
+		.select('id, name, active, criteria, display_options, created_at')
 		.order('created_at', { ascending: false });
 	return data ?? [];
 }
@@ -167,6 +179,13 @@ export async function toggleLink(linkId: string, active: boolean): Promise<void>
 
 export async function updateLinkLabel(linkId: string, name: string): Promise<void> {
 	await supabase.from('access_links').update({ name }).eq('id', linkId);
+}
+
+export async function updateLinkOptions(
+	linkId: string,
+	displayOptions: LinkDisplayOptions
+): Promise<void> {
+	await supabase.from('access_links').update({ display_options: displayOptions }).eq('id', linkId);
 }
 
 export async function listRequests(): Promise<any[]> {
@@ -210,7 +229,7 @@ export async function denyRequest(requestId: string): Promise<void> {
 export async function getLinkWithFile(linkId: string): Promise<any | null> {
 	const { data, error } = await supabase
 		.from('access_links')
-		.select('id, name, criteria, active, file_id, csv_files(*)')
+		.select('id, name, criteria, active, display_options, file_id, csv_files(*)')
 		.eq('id', linkId)
 		.maybeSingle();
 	if (error || !data) return null;
