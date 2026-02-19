@@ -208,7 +208,8 @@ export async function verifyLinkPassword(
 export async function activateDevice(
 	linkId: string,
 	userAgent: string,
-	markPasswordUsed: boolean = false
+	markPasswordUsed: boolean = false,
+	approvedRequestId?: string
 ): Promise<string> {
 	const token = generateToken();
 	const tokenHash = hashToken(token);
@@ -216,7 +217,8 @@ export async function activateDevice(
 	await supabase.from('link_devices').insert({
 		link_id: linkId,
 		token_hash: tokenHash,
-		ua_hash: uaHash
+		ua_hash: uaHash,
+		approved_request_id: approvedRequestId ?? null
 	});
 	if (markPasswordUsed) {
 		await supabase
@@ -278,6 +280,73 @@ export async function listRequests(): Promise<any[]> {
 		.neq('status', 'denied')
 		.order('created_at', { ascending: false });
 	return data ?? [];
+}
+
+export type LinkDevice = {
+	id: string;
+	link_id: string;
+	ua_hash: string;
+	created_at: string;
+	last_used_at: string | null;
+	approved_request_id: string | null;
+	access_links?: {
+		id: string;
+		name: string | null;
+		password_used_at: string | null;
+	} | null;
+};
+
+export type ApprovedRequest = {
+	id: string;
+	link_id: string;
+	ua_hash: string;
+	message: string | null;
+	created_at: string;
+	resolved_at: string | null;
+};
+
+export async function listLinkDevices(): Promise<LinkDevice[]> {
+	const { data } = await supabase
+		.from('link_devices')
+		.select(
+			'id, link_id, ua_hash, created_at, last_used_at, approved_request_id, access_links(id, name, password_used_at)'
+		)
+		.order('created_at', { ascending: false });
+	return (data ?? []).map((item: any) => ({
+		...item,
+		access_links: Array.isArray(item.access_links)
+			? (item.access_links[0] ?? null)
+			: item.access_links
+	})) as LinkDevice[];
+}
+
+export async function listApprovedRequests(): Promise<ApprovedRequest[]> {
+	const { data } = await supabase
+		.from('recovery_requests')
+		.select('id, link_id, ua_hash, message, created_at, resolved_at')
+		.eq('status', 'approved')
+		.order('resolved_at', { ascending: false });
+	return (data ?? []) as ApprovedRequest[];
+}
+
+export async function revokeViewerDevice(deviceId: string): Promise<void> {
+	const { data: device, error: deviceError } = await supabase
+		.from('link_devices')
+		.select('id, link_id, ua_hash')
+		.eq('id', deviceId)
+		.maybeSingle();
+	if (deviceError) throw new Error(deviceError.message);
+	if (!device) return;
+
+	const { error: deleteError } = await supabase.from('link_devices').delete().eq('id', deviceId);
+	if (deleteError) throw new Error(deleteError.message);
+
+	await supabase
+		.from('recovery_requests')
+		.update({ status: 'denied', resolved_at: new Date().toISOString() })
+		.eq('link_id', device.link_id)
+		.eq('ua_hash', device.ua_hash)
+		.eq('status', 'approved');
 }
 
 export async function submitRecoveryRequest(

@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ params, cookies, request }) => {
 			if (raw) {
 				const approved = await checkApprovedRequest(raw);
 				if (approved?.approved && approved.linkId === link.id) {
-					const token = await activateDevice(link.id, userAgent);
+					const token = await activateDevice(link.id, userAgent, false, raw);
 					cookies.set(deviceCookieName(link.id), signCookieValue(token), {
 						path: '/',
 						httpOnly: true,

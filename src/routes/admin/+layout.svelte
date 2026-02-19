@@ -19,6 +19,7 @@
 					<a class="hover:text-[var(--accent)]" href="/admin/csv">CSV</a>
 					<a class="hover:text-[var(--accent)]" href="/admin/links">Links</a>
 					<a class="hover:text-[var(--accent)]" href="/admin/requests">Requests</a>
+					<a class="hover:text-[var(--accent)]" href="/admin/viewers">Viewers</a>
 					<form method="post" action="/admin/logout" use:submitBusy>
 						<button
 							class="rounded-md border border-[var(--line)] px-3 py-1 hover:border-[var(--accent)]"
