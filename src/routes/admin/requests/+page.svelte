@@ -44,6 +44,9 @@
 					onchange={(e) => (searchText = e.currentTarget.value)}
 					oninput={(e) => {
 						searchText = e.currentTarget.value;
+						if (e.currentTarget.value === '') {
+							selectedLinkId = '';
+						}
 						showSearchDropdown = true;
 					}}
 					onfocus={() => (showSearchDropdown = true)}
@@ -81,6 +84,7 @@
 			{data.requests.length === 0 ? 'No requests yet.' : 'No requests for selected link.'}
 		</p>
 	{:else}
+		<p class="mt-4 text-sm text-[var(--muted)]">Showing {filteredRequests.length} {filteredRequests.length === 1 ? 'request' : 'requests'}</p>
 		<div class="mt-4 grid gap-3">
 			{#each filteredRequests as request (request.id)}
 				<div

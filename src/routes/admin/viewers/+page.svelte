@@ -53,6 +53,9 @@
 					onchange={(e) => (searchText = e.currentTarget.value)}
 					oninput={(e) => {
 						searchText = e.currentTarget.value;
+						if (e.currentTarget.value === '') {
+							selectedLinkId = '';
+						}
 						showSearchDropdown = true;
 					}}
 					onfocus={() => (showSearchDropdown = true)}
@@ -91,6 +94,7 @@
 			{viewers.length === 0 ? 'No viewers approved yet.' : 'No viewers for selected link.'}
 		</p>
 	{:else}
+		<p class="mt-4 text-sm text-[var(--muted)]">Showing {filteredViewers.length} {filteredViewers.length === 1 ? 'viewer' : 'viewers'}</p>
 		<div class="mt-4 grid gap-3">
 			{#each filteredViewers as viewer (viewer.id)}
 				<div
