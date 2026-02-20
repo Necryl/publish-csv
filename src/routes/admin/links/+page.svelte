@@ -11,6 +11,48 @@
 	let showSerialDefault = $state(false);
 	let hideFirstColumnDefault = $state(false);
 
+	// Search, filter, and sort state
+	let searchTerm = $state('');
+	let statusFilter = $state<'all' | 'active' | 'disabled'>('all');
+	let sortBy = $state<'name' | 'created' | 'status'>('created');
+	let sortOrder = $state<'asc' | 'desc'>('desc');
+
+	// Filtered and sorted links
+	let filteredLinks = $derived.by(() => {
+		let result = [...data.links];
+
+		// Apply search filter
+		if (searchTerm.trim()) {
+			const term = searchTerm.toLowerCase();
+			result = result.filter(
+				(link) =>
+					link.name.toLowerCase().includes(term) || link.id.toLowerCase().includes(term)
+			);
+		}
+
+		// Apply status filter
+		if (statusFilter === 'active') {
+			result = result.filter((link) => link.active);
+		} else if (statusFilter === 'disabled') {
+			result = result.filter((link) => !link.active);
+		}
+
+		// Apply sorting
+		result.sort((a, b) => {
+			let comparison = 0;
+			if (sortBy === 'name') {
+				comparison = a.name.localeCompare(b.name);
+			} else if (sortBy === 'status') {
+				comparison = (a.active ? 1 : 0) - (b.active ? 1 : 0);
+			} else if (sortBy === 'created') {
+				comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+			}
+			return sortOrder === 'asc' ? comparison : -comparison;
+		});
+
+		return result;
+	});
+
 	const operators: Record<CsvColumnType, { label: string; value: CsvCriteria['op'] }[]> = {
 		string: [
 			{ label: 'equals', value: 'eq' },
@@ -65,6 +107,7 @@
 	};
 
 	const storageKey = 'publishCsv:linkOptions';
+	const sortStorageKey = 'publishCsv:linkListSort';
 
 	onMount(() => {
 		const raw = window.localStorage.getItem(storageKey);
@@ -76,6 +119,21 @@
 		} catch {
 			return;
 		}
+
+		// Load sort preferences
+		const sortRaw = window.localStorage.getItem(sortStorageKey);
+		if (!sortRaw) return;
+		try {
+			const sortParsed = JSON.parse(sortRaw) as { sortBy?: string; sortOrder?: string };
+			if (sortParsed.sortBy === 'name' || sortParsed.sortBy === 'created' || sortParsed.sortBy === 'status') {
+				sortBy = sortParsed.sortBy;
+			}
+			if (sortParsed.sortOrder === 'asc' || sortParsed.sortOrder === 'desc') {
+				sortOrder = sortParsed.sortOrder;
+			}
+		} catch {
+			return;
+		}
 	});
 
 	const persistDefaults = () => {
@@ -83,6 +141,14 @@
 		window.localStorage.setItem(
 			storageKey,
 			JSON.stringify({ showSerial: showSerialDefault, hideFirstColumn: hideFirstColumnDefault })
+		);
+	};
+
+	const persistSortPreferences = () => {
+		if (typeof window === 'undefined') return;
+		window.localStorage.setItem(
+			sortStorageKey,
+			JSON.stringify({ sortBy, sortOrder })
 		);
 	};
 
@@ -212,8 +278,65 @@
 		{#if !data.links.length}
 			<p class="mt-2 text-sm text-[var(--muted)]">No links yet.</p>
 		{:else}
-			<div class="mt-4 grid gap-3">
-				{#each data.links as link (link.id)}
+			<!-- Search, Filter, and Sort Controls -->
+			<div class="mt-4 grid gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-3 sm:grid-cols-2 lg:grid-cols-4">
+				<label class="form-group">
+					<span class="text-xs font-medium">Search</span>
+					<input
+						type="text"
+						placeholder="Search by name or ID..."
+						class="rounded-md border border-[var(--line)] bg-transparent px-2 py-1 text-sm"
+						bind:value={searchTerm}
+					/>
+				</label>
+				<label class="form-group">
+					<span class="text-xs font-medium">Status</span>
+					<select
+						class="rounded-md border border-[var(--line)] bg-transparent px-2 py-1 text-sm"
+						bind:value={statusFilter}
+					>
+						<option value="all">All</option>
+						<option value="active">Active only</option>
+						<option value="disabled">Disabled only</option>
+					</select>
+				</label>
+				<label class="form-group">
+					<span class="text-xs font-medium">Sort by</span>
+					<select
+						class="rounded-md border border-[var(--line)] bg-transparent px-2 py-1 text-sm"
+						bind:value={sortBy}
+						onchange={persistSortPreferences}
+					>
+						<option value="created">Created date</option>
+						<option value="name">Name</option>
+						<option value="status">Status</option>
+					</select>
+				</label>
+				<label class="form-group">
+					<span class="text-xs font-medium">Order</span>
+					<select
+						class="rounded-md border border-[var(--line)] bg-transparent px-2 py-1 text-sm"
+						bind:value={sortOrder}
+						onchange={persistSortPreferences}
+					>
+						<option value="desc">Descending</option>
+						<option value="asc">Ascending</option>
+					</select>
+				</label>
+			</div>
+
+			<!-- Results count -->
+			<p class="mt-3 text-xs text-[var(--muted)]">
+				Showing {filteredLinks.length} of {data.links.length} links
+			</p>
+
+			{#if filteredLinks.length === 0}
+				<div class="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-6 text-center">
+					<p class="text-sm text-[var(--muted)]">No links match your search criteria.</p>
+				</div>
+			{:else}
+				<div class="mt-4 grid gap-3">
+					{#each filteredLinks as link (link.id)}
 					<div
 						class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 transition-all hover:shadow-md sm:p-5"
 					>
@@ -321,6 +444,7 @@
 					</div>
 				{/each}
 			</div>
+			{/if}
 		{/if}
 	</div>
 </section>
