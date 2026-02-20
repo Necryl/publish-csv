@@ -40,7 +40,7 @@
 					Enter the one-time password to unlock this link on your device.
 				</p>
 				<form class="mt-6 grid gap-3" method="post" use:submitBusy>
-					<label class="form-group">
+					<label class="form-group min-w-0">
 						<span>Password</span>
 						<input type="password" name="password" required />
 					</label>
@@ -49,7 +49,7 @@
 							<span>{form.error}</span>
 						</div>
 					{/if}
-					<button class="btn-primary w-full" formaction="?/login" type="submit"> Unlock </button>
+					<button class="btn-primary min-w-0 w-full" formaction="?/login" type="submit"> Unlock </button>
 				</form>
 			</div>
 
@@ -59,7 +59,7 @@
 					If you cannot access this device, send a request to the admin.
 				</p>
 				<form class="mt-4 grid gap-3" method="post" use:submitBusy>
-					<label class="form-group">
+					<label class="form-group min-w-0">
 						<span>Message</span>
 						<textarea
 							class="min-h-[120px]"
@@ -67,7 +67,7 @@
 							placeholder="Tell the admin who you are..."
 						></textarea>
 					</label>
-					<button class="btn-secondary w-full" formaction="?/request" type="submit">
+					<button class="btn-secondary min-w-0 w-full" formaction="?/request" type="submit">
 						Send request
 					</button>
 				</form>
