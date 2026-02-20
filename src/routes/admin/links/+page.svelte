@@ -6,6 +6,12 @@
 	let { data, form } = $props();
 	let columns = $derived(data.current?.schema?.columns ?? []);
 
+	let shareTemplate = $state('');
+
+	$effect(() => {
+		shareTemplate = data.shareTemplate ?? '';
+	});
+
 	let criteria = $state<CsvCriteria[]>([]);
 	let criteriaJson = $derived(JSON.stringify(criteria));
 	let showSerialDefault = $state(false);
@@ -103,6 +109,16 @@
 		} catch {
 			// Clipboard may be blocked; fallback to prompt.
 			window.prompt('Copy link:', url);
+		}
+	};
+
+	const copyShareMessage = async (url: string) => {
+		const message = shareTemplate.replace(/\{LINK\}/g, url);
+		try {
+			await navigator.clipboard.writeText(message);
+		} catch {
+			// Clipboard may be blocked; fallback to prompt.
+			window.prompt('Copy message:', message);
 		}
 	};
 
@@ -278,6 +294,28 @@
 		{#if !data.links.length}
 			<p class="mt-2 text-sm text-[var(--muted)]">No links yet.</p>
 		{:else}
+			<!-- Share Message Template -->
+			<div class="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+				<form class="grid gap-3" method="post" use:submitBusy>
+					<label class="form-group">
+						<span class="text-sm font-medium">Share Message Template</span>
+						<textarea
+							name="template"
+							bind:value={shareTemplate}
+							class="rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm font-mono"
+							rows="4"
+							placeholder="Enter your share message template.&#10;Use {'\u007b'}LINK{'\u007d'} as a placeholder for the link URL.&#10;Example: Check out this data: {'\u007b'}LINK{'\u007d'}"
+						></textarea>
+					</label>
+					<p class="text-xs text-[var(--muted)]">
+						Use <code class="rounded bg-[var(--line)] px-1 py-0.5">{'{LINK}'}</code> as a placeholder for the link URL.
+					</p>
+					<button class="btn-primary w-fit" formaction="?/updateShareTemplate" type="submit">
+						Save Template
+					</button>
+				</form>
+			</div>
+
 			<!-- Search, Filter, and Sort Controls -->
 			<div class="mt-4 grid gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-3 sm:grid-cols-2 lg:grid-cols-4">
 				<label class="form-group">
@@ -394,8 +432,15 @@
 								type="button"
 							>
 								Copy
+							</button>						{#if shareTemplate}
+							<button
+								class="btn-secondary text-xs"
+								onclick={() => copyShareMessage(`${data.baseUrl}${link.id}`)}
+								type="button"
+							>
+								Share
 							</button>
-							<form class="flex flex-wrap items-center gap-2" method="post" use:submitBusy>
+						{/if}							<form class="flex flex-wrap items-center gap-2" method="post" use:submitBusy>
 								<input type="hidden" name="id" value={link.id} />
 								<label class="flex items-center gap-1 text-xs text-[var(--muted)]">
 									<input

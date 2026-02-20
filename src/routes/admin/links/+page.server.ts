@@ -4,7 +4,9 @@ import {
 	createAccessLink,
 	deleteLink,
 	getCurrentFile,
+	getShareMessageTemplate,
 	listLinks,
+	setShareMessageTemplate,
 	toggleLink,
 	updateLinkLabel,
 	updateLinkOptions
@@ -16,11 +18,16 @@ import { mapActionError } from '$lib/server/error-mapper';
 import { logError } from '$lib/server/logger';
 
 export const load: PageServerLoad = async ({ url }) => {
-	const [links, current] = await Promise.all([listLinks(), getCurrentFile()]);
+	const [links, current, shareTemplate] = await Promise.all([
+		listLinks(),
+		getCurrentFile(),
+		getShareMessageTemplate()
+	]);
 	return {
 		links,
 		current,
-		baseUrl: `${url.origin}/v/`
+		baseUrl: `${url.origin}/v/`,
+		shareTemplate
 	};
 };
 
@@ -108,5 +115,16 @@ export const actions: Actions = {
 		if (!id) return fail(400, { error: 'Missing link id' });
 		await deleteLink(id);
 		return { success: true };
+	},
+	updateShareTemplate: async ({ request }) => {
+		const form = await request.formData();
+		const template = String(form.get('template') ?? '');
+		try {
+			await setShareMessageTemplate(template);
+			return { success: true };
+		} catch (error) {
+			logError('share_template_update_failed', { error });
+			return fail(400, { error: mapActionError(error, 'Unable to save template') });
+		}
 	}
 };

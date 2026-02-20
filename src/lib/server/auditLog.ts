@@ -8,7 +8,8 @@ type AuditAction =
 	| 'recovery_requested'
 	| 'recovery_approved'
 	| 'recovery_denied'
-	| 'device_revoked';
+	| 'device_revoked'
+	| 'share_template_updated';
 
 export async function auditLog(
 	action: AuditAction,

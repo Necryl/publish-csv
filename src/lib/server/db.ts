@@ -420,3 +420,24 @@ export async function checkApprovedRequest(
 	if (!data) return null;
 	return { approved: data.status === 'approved', linkId: data.link_id };
 }
+
+export async function getShareMessageTemplate(): Promise<string> {
+	const { data } = await supabase
+		.from('app_settings')
+		.select('value')
+		.eq('key', 'share_message_template')
+		.maybeSingle();
+	return (data?.value?.template as string) ?? '';
+}
+
+export async function setShareMessageTemplate(template: string): Promise<void> {
+	const { error } = await supabase.from('app_settings').upsert({
+		key: 'share_message_template',
+		value: { template },
+		updated_at: new Date().toISOString()
+	});
+	if (error) {
+		throw error;
+	}
+	await auditLog('share_template_updated', { templateLength: template.length });
+}
