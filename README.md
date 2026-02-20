@@ -51,6 +51,29 @@ bun run dev
 bun run dev -- --open
 ```
 
+If you prefer npm:
+
+```sh
+npm install
+npm run dev
+```
+
+## Testing
+
+Run the server-side test suite:
+
+```sh
+bun run test
+```
+
+Optional test targets:
+
+```sh
+bun run test:unit
+bun run test:server
+bun run test:browser
+```
+
 ## Supabase setup
 
 1. Create a Supabase project.
@@ -68,7 +91,6 @@ ADMIN_EMAIL=
 ADMIN_PASSWORD=
 ENCRYPTION_MASTER_KEY=
 COOKIE_SECRET=
-CLEANUP_SECRET=
 ```
 
 Generate keys (run twice, once per variable):
@@ -85,7 +107,7 @@ To keep Supabase free tier usage under control, automatic cleanup runs daily:
 - **Recovery requests** (denied/resolved) are cleaned after 30 days
 - **Link devices** are kept indefinitely and managed manually (not auto-deleted)
 
-Cleanup runs automatically on server startup and once per 24 hours. No configuration needed.
+Cleanup runs automatically on server startup and once per 24 hours. No manual endpoint or secret required.
 
 ## Security notes
 
