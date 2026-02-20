@@ -42,7 +42,7 @@
 				<form class="mt-6 grid gap-3" method="post" use:submitBusy>
 					<label class="form-group min-w-0">
 						<span>Password</span>
-						<input type="password" name="password" required />
+						<input class="min-w-0" type="password" name="password" required />
 					</label>
 					{#if form?.error}
 						<div class="alert alert-error">
@@ -62,7 +62,7 @@
 					<label class="form-group min-w-0">
 						<span>Message</span>
 						<textarea
-							class="min-h-[120px]"
+							class="min-h-[120px] min-w-0"
 							name="message"
 							placeholder="Tell the admin who you are..."
 						></textarea>
