@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { submitBusy } from '$lib/submit-busy';
+	import NotificationToggle from '$lib/NotificationToggle.svelte';
 	let { data, form } = $props();
 	let rows = $derived(data.rows ?? []);
 	let columns = $derived(data.columns ?? []);
@@ -49,7 +50,9 @@
 							<span>{form.error}</span>
 						</div>
 					{/if}
-					<button class="btn-primary min-w-0 w-full" formaction="?/login" type="submit"> Unlock </button>
+					<button class="btn-primary w-full min-w-0" formaction="?/login" type="submit">
+						Unlock
+					</button>
 				</form>
 			</div>
 
@@ -67,17 +70,22 @@
 							placeholder="Tell the admin who you are..."
 						></textarea>
 					</label>
-					<button class="btn-secondary min-w-0 w-full" formaction="?/request" type="submit">
+					<button class="btn-secondary w-full min-w-0" formaction="?/request" type="submit">
 						Send request
 					</button>
 				</form>
 			</div>
 		{:else if data.status === 'ok'}
 			<div class="card">
-				<h1 class="text-xl font-semibold">{data.name}</h1>
-				{#if data.updateMessage && data.updateMessage.trim()}
-					<p class="mt-2 text-sm text-[var(--muted)]">Updated: {data.updateMessage}</p>
-				{/if}
+				<div class="flex items-start justify-between">
+					<div>
+						<h1 class="text-xl font-semibold">{data.name}</h1>
+						{#if data.updateMessage && data.updateMessage.trim()}
+							<p class="mt-2 text-sm text-[var(--muted)]">Updated: {data.updateMessage}</p>
+						{/if}
+					</div>
+					<NotificationToggle type="viewer" linkId={data.linkId} />
+				</div>
 			</div>
 			<div class="overflow-auto rounded-lg border border-[var(--line)] bg-[var(--surface-2)]">
 				<table class="min-w-full text-left text-xs sm:text-sm">

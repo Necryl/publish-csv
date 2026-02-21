@@ -383,20 +383,36 @@ export async function submitRecoveryRequest(
 	return data.id;
 }
 
-export async function approveRequest(requestId: string): Promise<void> {
+export async function approveRequest(requestId: string): Promise<string> {
+	const { data } = await supabase
+		.from('recovery_requests')
+		.select('link_id')
+		.eq('id', requestId)
+		.maybeSingle();
+
 	await supabase
 		.from('recovery_requests')
 		.update({ status: 'approved', resolved_at: new Date().toISOString() })
 		.eq('id', requestId);
 	await auditLog('recovery_approved', { requestId });
+
+	return data?.link_id ?? '';
 }
 
-export async function denyRequest(requestId: string): Promise<void> {
+export async function denyRequest(requestId: string): Promise<string> {
+	const { data } = await supabase
+		.from('recovery_requests')
+		.select('link_id')
+		.eq('id', requestId)
+		.maybeSingle();
+
 	await supabase
 		.from('recovery_requests')
 		.update({ status: 'denied', resolved_at: new Date().toISOString() })
 		.eq('id', requestId);
 	await auditLog('recovery_denied', { requestId });
+
+	return data?.link_id ?? '';
 }
 
 export async function getLinkWithFile(linkId: string): Promise<any | null> {
@@ -440,4 +456,88 @@ export async function setShareMessageTemplate(template: string): Promise<void> {
 		throw error;
 	}
 	await auditLog('share_template_updated', { templateLength: template.length });
+}
+
+// Push notification subscription management
+export type PushSubscription = {
+	endpoint: string;
+	auth: string;
+	p256dh: string;
+};
+
+export async function subscribeAdminToPushNotifications(
+	sessionId: string,
+	subscription: PushSubscription
+): Promise<void> {
+	const { error } = await supabase.from('push_subscriptions').insert({
+		data_type: 'admin',
+		session_id: sessionId,
+		endpoint: subscription.endpoint,
+		auth: subscription.auth,
+		p256dh: subscription.p256dh
+	});
+
+	if (error) {
+		// If endpoint already exists, update it
+		if (error.code === '23505') {
+			const { error: updateError } = await supabase
+				.from('push_subscriptions')
+				.update({
+					auth: subscription.auth,
+					p256dh: subscription.p256dh,
+					last_active_at: new Date().toISOString(),
+					session_id: sessionId
+				})
+				.eq('endpoint', subscription.endpoint);
+			if (updateError) {
+				throw updateError;
+			}
+		} else {
+			console.error(
+				'Insert error code:',
+				error.code,
+				'message:',
+				error.message,
+				'details:',
+				error.details
+			);
+			throw error;
+		}
+	}
+}
+
+export async function subscribeViewerToPushNotifications(
+	linkId: string,
+	subscription: PushSubscription
+): Promise<void> {
+	const { error } = await supabase.from('push_subscriptions').insert({
+		data_type: 'viewer',
+		link_id: linkId,
+		endpoint: subscription.endpoint,
+		auth: subscription.auth,
+		p256dh: subscription.p256dh
+	});
+
+	if (error) {
+		// If endpoint already exists, update it
+		if (error.code === '23505') {
+			await supabase
+				.from('push_subscriptions')
+				.update({
+					auth: subscription.auth,
+					p256dh: subscription.p256dh,
+					last_active_at: new Date().toISOString()
+				})
+				.eq('endpoint', subscription.endpoint);
+		} else {
+			throw error;
+		}
+	}
+}
+
+export async function unsubscribeFromPushNotifications(endpoint: string): Promise<void> {
+	const { error } = await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+	if (error) {
+		throw error;
+	}
 }

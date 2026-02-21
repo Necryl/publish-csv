@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { submitBusy } from '$lib/submit-busy';
+	import NotificationToggle from '$lib/NotificationToggle.svelte';
 	let { children } = $props();
 
 	const isActive = (path: string) => {
@@ -61,6 +62,9 @@
 					>
 						Viewers
 					</a>
+					<div class="ml-2">
+						<NotificationToggle type="admin" />
+					</div>
 					<form method="post" action="/admin/logout" use:submitBusy>
 						<button class="btn-secondary ml-2" type="submit"> Sign out </button>
 					</form>

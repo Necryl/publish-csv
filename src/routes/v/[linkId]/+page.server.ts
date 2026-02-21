@@ -15,6 +15,7 @@ import { hashDeviceFingerprint, signCookieValue, verifySignedCookie } from '$lib
 import { getRateLimitKey, rateLimit } from '$lib/server/rateLimit';
 import { recoveryRequestSchema } from '$lib/server/schemas';
 import { validateAdminSession } from '$lib/server/auth';
+import { notifyAdmins } from '$lib/server/push';
 import { dev } from '$app/environment';
 
 const MAX_ROWS = 500;
@@ -115,6 +116,7 @@ export const load: PageServerLoad = async ({ params, cookies, request, getClient
 
 	const result = {
 		status: 'ok',
+		linkId: link.id,
 		name: link.name,
 		columns: displayColumns,
 		rows: displayRows,
@@ -194,6 +196,13 @@ export const actions: Actions = {
 			sameSite: 'strict',
 			secure: !dev,
 			maxAge: 60 * 60 * 24
+		});
+		// Notify admins of new recovery request
+		const link = await getLinkWithFile(params.linkId);
+		await notifyAdmins({
+			title: 'New Recovery Request',
+			body: `${link?.name || 'Untitled link'} - viewer needs access`,
+			data: { url: '/admin/requests' }
 		});
 		return { requested: true };
 	}

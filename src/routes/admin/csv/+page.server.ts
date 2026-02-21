@@ -7,10 +7,12 @@ import {
 	updateFileMessage,
 	getAllFiles,
 	deleteFile,
-	setCurrentFile
+	setCurrentFile,
+	listLinks
 } from '$lib/server/db';
 import { mapActionError } from '$lib/server/error-mapper';
 import { logError } from '$lib/server/logger';
+import { notifyLinkSubscribers } from '$lib/server/push';
 
 const MAX_UPDATE_MESSAGE_LENGTH = 500;
 
@@ -63,6 +65,20 @@ export const actions: Actions = {
 				return fail(400, { error: 'Update message is too long' });
 			}
 			await updateFileMessage(fileId, messageValue);
+			// Notify viewers of links using this file
+			const links = await listLinks();
+			for (const link of links) {
+				if (link.file_id === fileId) {
+					const body = messageValue
+						? `${link.name} updated: ${messageValue}`
+						: `${link.name} updated`;
+					await notifyLinkSubscribers(link.id, {
+						title: 'Update Available',
+						body,
+						data: { url: `/v/${link.id}` }
+					});
+				}
+			}
 			return { success: true };
 		} catch (error) {
 			logError('csv_update_message_failed', { error, fileId });
@@ -77,6 +93,22 @@ export const actions: Actions = {
 		}
 		try {
 			await setCurrentFile(fileId);
+			// Notify viewers that data has been updated
+			const files = await getAllFiles();
+			const activeFile = files.find((f) => f.id === fileId);
+			const links = await listLinks();
+			for (const link of links) {
+				if (link.file_id === fileId) {
+					const body = activeFile?.update_message
+						? `${link.name} updated: ${activeFile.update_message}`
+						: `${link.name} updated`;
+					await notifyLinkSubscribers(link.id, {
+						title: 'Data Updated',
+						body,
+						data: { url: `/v/${link.id}` }
+					});
+				}
+			}
 			return { success: true };
 		} catch (error) {
 			logError('csv_set_active_failed', { error, fileId });
